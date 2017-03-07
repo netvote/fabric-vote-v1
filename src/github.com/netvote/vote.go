@@ -495,15 +495,11 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 			parseArg(args[0], &ballot_obj)
 			result, err = json.Marshal(stateDao.GetBallotDecisions(ballot_obj.Id))
 		default:
-			err = errors.New("Invalid Function: "+function)
+			panic("Invalid Function: "+function)
 	}
 
-	if(err != nil){
-		resp = shim.Error(err.Error())
-	}else{
-		resp = shim.Success(result)
-	}
-	return resp
+	return shim.Success(result)
+
 }
 
 func getActiveDecisions(stateDao StateDAO, voter Voter)([]Decision){
