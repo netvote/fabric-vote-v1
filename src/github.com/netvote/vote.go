@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric/accesscontrol/impl"
 	"encoding/json"
 	"os"
 	"time"
@@ -621,7 +622,15 @@ func (t *StateDAO) getKey(objectType string, objectId string) (string){
 
 func (t *StateDAO) getAccountId()(string){
 	//testing hack because it's tricky to mock ReadCertAttribute - hardcoded to limit risk
-	return "netvote"
+	if(os.Getenv("TEST_ENV") != ""){
+		return "netvote"
+	}
+	result, err := impl.NewAccessControlShim(t.Stub).ReadCertAttribute(ATTRIBUTE_ACCOUNT_ID)
+
+	if(err != nil){
+		panic("error extracting accountId: "+err.Error())
+	}
+	return string(result)
 }
 
 func (t *StateDAO) deleteState(objectType string, id string){
