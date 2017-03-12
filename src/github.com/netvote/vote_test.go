@@ -10,15 +10,9 @@ import (
 
 const CREATE_DECISION_JSON = `{"Id":"test-id","Name":"What is your decision?","BallotId":"transaction-id","Options":[{"Id":"a","Name":"A","Attributes":{"image":"/url"}}],"Attributes":{"Key":"Value"}}`
 const CREATE_DECISION2_JSON = `{"Id":"test-id2","Name":"What is your other decision?","BallotId":"transaction-id","Options":[{"Id":"b","Name":"B","Attributes":{"image":"/url"}}],"Attributes":{"Key":"Value"}}`
-
-
 const TEST_DECISION_JSON = `{"Id":"test-id","Name":"What is your decision?","BallotId":"transaction-id","Options":[{"Id":"a","Name":"A","Attributes":{"image":"/url"}}],"Attributes":{"Key":"Value"},"ResponsesRequired":1,"RepeatVoteDelaySeconds":0,"Repeatable":false}`
-
 const CREATE_DECISION_JSON_BALLOT2 = `{"Id":"test-id2","Name":"What is your decision?","BallotId":"otherballot","Options":[{"Id":"a","Name":"A","Attributes":{"image":"/url"}}],"Attributes":{"Key":"Value"}}`
-
-
 const CREATE_DECISION_JSON_REQUIRED_2 = `{"Id":"test-id","Name":"What is your decision?","BallotId":"transaction-id","Options":[{"Id":"a","Name":"A","Attributes":{"image":"/url"}}],"Attributes":{"Key":"Value"},"ResponsesRequired":2}`
-
 const CREATE_REPEATABLE_DECISION_JSON = `{"Id":"test-id","Name":"What is your decision?","BallotId":"transaction-id","Options":[{"Id":"a","Name":"A","Attributes":{"image":"/url"}}],"Attributes":{"Key":"Value"},"ResponsesRequired":1,"RepeatVoteDelaySeconds":100,"Repeatable":true}`
 
 
@@ -52,6 +46,7 @@ func to_byte_array(function string, args []string)([][]byte){
 
 func checkQuery(t *testing.T, stub *shim.MockStub, function string, args []string, value string) {
 	//b_args := to_byte_array(function, args)
+	args = append([]string{function}, args...)
 
 	resp := stub.MockInvoke("QUERYID", to_byte_array(function, args))
 
@@ -76,6 +71,7 @@ func checkInvoke(t *testing.T, stub *shim.MockStub, function string, args []stri
 }
 
 func checkInvokeTX(t *testing.T, stub *shim.MockStub, transactionId string, function string, args []string) {
+	args = append([]string{function}, args...)
 	resp := stub.MockInvoke("DOESNTMATTER", to_byte_array(function, args))
 	if resp.Status != 200 {
 		fmt.Println("Invoke", args, "failed", resp.Message)
@@ -84,6 +80,7 @@ func checkInvokeTX(t *testing.T, stub *shim.MockStub, transactionId string, func
 }
 
 func checkInvokeError(t *testing.T, stub *shim.MockStub, function string, args []string, error string) {
+	args = append([]string{function}, args...)
 	resp := stub.MockInvoke("1", to_byte_array(function, args))
 	if resp.Status == 200 {
 		fmt.Println("No error was found, but error was expected: "+error)

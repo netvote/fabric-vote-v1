@@ -71,6 +71,7 @@ module.exports.processProposal = function(chain, results, proposalType) {
 		let one_good = false;
 		if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
 			one_good = true;
+			logger.info("response data:"+new Buffer(proposalResponses[i].response.payload).toString("utf8"))
 			logger.info(proposalType + ' proposal was good');
 		} else {
 			logger.error(proposalType + ' proposal was bad');

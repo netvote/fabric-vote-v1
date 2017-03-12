@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"github.com/hyperledger/fabric/accesscontrol/impl"
 	"encoding/json"
 	"os"
 	"time"
@@ -31,8 +30,6 @@ const FUNC_DELETE_BALLOT = "delete_ballot"
 const FUNC_CAST_VOTES = "cast_votes"
 const FUNC_INIT_VOTER = "init_voter"
 const FUNC_ASSIGN_BALLOT = "assign_ballot"
-
-const QUERY_GET_RESULTS = "get_results"
 const QUERY_GET_BALLOT_RESULTS = "get_ballot_results"
 const QUERY_GET_BALLOT = "get_ballot"
 const QUERY_GET_VOTER_BALLOTS = "get_voter_ballots"
@@ -237,10 +234,14 @@ func addDecisionToVoter(ballotId string, voter *Voter, decision Decision){
 func addBallot(stateDao StateDAO, ballotDecisions BallotDecisions) (Ballot){
 	ballot := ballotDecisions.Ballot
 	ballot.Decisions = []string{}
+	if(ballot.Id == ""){
+		panic("ballot id is required")
+	}
 
 	for _, decision := range ballotDecisions.Decisions {
+		log("adding decision: "+decision.Name)
 		decision.BallotId = ballot.Id
-		addDecisionToChain(stateDao, decision)
+		decision = addDecisionToChain(stateDao, decision)
 		ballot.Decisions = append(ballot.Decisions, decision.Id)
 	}
 
@@ -257,7 +258,7 @@ func addDecisionToBallot(stateDao StateDAO, ballotId string, decisionId string){
 }
 
 func log(message string){
-	fmt.Printf("NETVOTE LOG: %s\n", message)
+	fmt.Printf(time.Now().String()+" - NETVOTE: %s\n", message)
 }
 
 func getDimensionsForVote(voter Voter, vote Vote)([]string){
@@ -361,17 +362,20 @@ func hasRole(stub shim.ChaincodeStubInterface, role string) (bool){
 	return true;
 }
 
-func addDecisionToChain(stateDao StateDAO, decision Decision) ([]byte){
+func addDecisionToChain(stateDao StateDAO, decision Decision) (Decision){
 	if(decision.ResponsesRequired == 0) {
 		decision.ResponsesRequired = 1
 	}
 	if(decision.BallotId == ""){
 		panic("ballotId is required for decision")
 	}
+	if(decision.Id == ""){
+		panic("Id is required for decision")
+	}
 	results := DecisionResults { Id: decision.Id, Results: make(map[string]map[string]int)}
 	stateDao.SaveDecision(decision)
 	stateDao.SaveDecisionResults(decision.BallotId, results)
-	return nil
+	return decision
 }
 
 func addDecision(stateDao StateDAO, decision Decision){
@@ -441,7 +445,8 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 		case FUNC_ADD_BALLOT:
 			var ballotDecisions BallotDecisions
 			parseArg(args[0], &ballotDecisions)
-			addBallot(stateDao, ballotDecisions)
+			ballot := addBallot(stateDao, ballotDecisions)
+			result, err = json.Marshal(ballot)
 		case FUNC_DELETE_BALLOT:
 			var ballot_payload Ballot
 			parseArg(args[0], &ballot_payload)
@@ -577,12 +582,13 @@ func getVoterBallotDecisions(stateDao StateDAO, voterId string, ballotId string)
 
 func (t *VoteChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	//function, args := stub.GetFunctionAndParameters()
-	function, args := stub.GetFunctionAndParameters()
-	return handleInvoke(stub, function, args)
+	_, args := stub.GetFunctionAndParameters()
+	return handleInvoke(stub, args[0], args[1:])
 }
 
 func (t *VoteChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
-	return shim.Success([]byte("init"))
+	log("Init called")
+	return shim.Success(nil)
 }
 
 func main() {
@@ -622,7 +628,7 @@ func (t *StateDAO) getKey(objectType string, objectId string) (string){
 
 func (t *StateDAO) getAccountId()(string){
 	//testing hack because it's tricky to mock ReadCertAttribute - hardcoded to limit risk
-	if(os.Getenv("TEST_ENV") != ""){
+	/*if(os.Getenv("TEST_ENV") != ""){
 		return "netvote"
 	}
 	result, err := impl.NewAccessControlShim(t.Stub).ReadCertAttribute(ATTRIBUTE_ACCOUNT_ID)
@@ -630,7 +636,8 @@ func (t *StateDAO) getAccountId()(string){
 	if(err != nil){
 		panic("error extracting accountId: "+err.Error())
 	}
-	return string(result)
+	return string(result)*/
+	return "netvote"
 }
 
 func (t *StateDAO) deleteState(objectType string, id string){

@@ -18,7 +18,7 @@
 'use strict';
 
 let log4js = require('log4js');
-let logger = log4js.getLogger('DEPLOY');
+let logger = log4js.getLogger('INVOKE');
 
 let hfc = require('fabric-client');
 let utils = require('fabric-client/lib/utils.js');
@@ -35,10 +35,6 @@ let client = new hfc();
 let chain;
 let eventhub;
 let tx_id = null;
-
-if (!process.env.GOPATH){
-	process.env.GOPATH = config.goPath;
-}
 
 init();
 
@@ -60,34 +56,33 @@ hfc.newDefaultKeyValueStore({
 	return helper.getSubmitter(client);
 }).then(
 	function(admin) {
-		logger.info('Successfully obtained enrolled user to deploy the chaincode');
+		logger.info('Successfully obtained user to submit transaction');
 
-		logger.info('Executing Deploy');
+		logger.info('Executing Invoke');
 		tx_id = helper.getTxId();
 		let nonce = utils.getNonce();
-		let args = helper.getArgs(config.deployRequest.args);
+		let args = helper.getArgs(["add_ballot", JSON.stringify(config.createBallotData)]);
 		// send proposal to endorser
 		let request = {
-			chaincodePath: config.chaincodePath,
 			chaincodeId: config.chaincodeID,
-			fcn: config.deployRequest.functionName,
+			fcn: "invoke",
 			args: args,
 			chainId: config.channelID,
 			txId: tx_id,
-			nonce: nonce,
-			'dockerfile-contents': config.dockerfile_contents
+			nonce: nonce
 		};
-		return chain.sendDeploymentProposal(request);
+		logger.info("request="+JSON.stringify(request))
+		return chain.sendTransactionProposal(request);
 	}
 ).then(
 	function(results) {
 		logger.info('Successfully obtained proposal responses from endorsers');
-		return helper.processProposal(chain, results, 'deploy');
+
+		return helper.processProposal(chain, results, 'create_ballot');
 	}
 ).then(
 	function(response) {
 		if (response.status === 'SUCCESS') {
-			logger.info('Successfully sent deployment transaction to the orderer.');
 			let handle = setTimeout(() => {
 				logger.error('Failed to receive transaction notification within the timeout period');
 				process.exit(1);
@@ -98,13 +93,11 @@ hfc.newDefaultKeyValueStore({
 				clearTimeout(handle);
 				eventhub.disconnect();
 			});
-		} else {
-			logger.error('Failed to order the deployment endorsement. Error code: ' + response.status);
 		}
 	}
 ).catch(
 	function(err) {
 		eventhub.disconnect();
-		logger.error(err.stack ? err.stack : err);
+		logger.error('Failed to invoke transaction due to error: ' + err.stack ? err.stack : err);
 	}
 );
