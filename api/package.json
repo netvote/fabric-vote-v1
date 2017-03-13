@@ -1,0 +1,20 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "Netvote interface to blockchain transactions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "slanders",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "body-parser": "1.17.1",
+    "express": "4.15.2",
+    "fabric-client": "^0.1.0",
+    "fabric-ca-client": "^0.1.0",
+    "log4js": "^0.6.38",
+    "mongoose": "4.8.7",
+    "winston": "^2.2.0"
+  }
+}
