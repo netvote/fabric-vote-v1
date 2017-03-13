@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: ca
+  namespace: default
+spec:
+  ports:
+  - name: ""
+    nodePort: 0
+    port: 7054
+    protocol: ""
+    targetPort: 0
+  selector:
+    service: ca
+status:
+  loadBalancer: {}

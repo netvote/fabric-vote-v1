@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    service: peer0
+  name: peer0
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    service: peer0
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: peer0
+    spec:
+      containers:
+      - command:
+        - peer
+        args: ["node", "start", "--peer-defaultchain=false"]
+        env:
+        - name: CORE_PEER_ADDRESSAUTODETECT
+          value: 'true'
+        - name: CORE_VM_ENDPOINT
+          value: unix:///host/var/run/docker.sock.pem
+        - name: CORE_LOGGING_LEVEL
+          value: DEBUG
+        - name: CORE_PEER_NETWORKID
+          value: peer0
+        - name: CORE_NEXT
+          value: 'true'
+        - name: CORE_PEER_ENDORSER_ENABLED
+          value: 'true'
+        - name: CORE_PEER_ID
+          value: peer0
+        - name: CORE_PEER_PROFILE_ENABLED
+          value: 'true'
+        - name: CORE_PEER_COMMITTER_LEDGER_ORDERER
+          value: orderer:7050
+        - name: CORE_PEER_GOSSIP_ORGLEADER
+          value: 'true'
+        - name: CORE_PEER_GOSSIP_IGNORESECURITY
+          value: 'true'
+        image: sfhackfest22017/fabric-peer:x86_64-0.7.0-snapshot-c7b3fe0
+        imagePullPolicy: ""
+        name: peer0
+        workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+        ports:
+        - containerPort: 7051
+        - containerPort: 7053
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+status:
+  replicas: 0

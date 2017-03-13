@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    service: orderer
+  name: orderer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    service: orderer
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: orderer
+    spec:
+      containers:
+      - command:
+        - orderer
+        env:
+        - name: ORDERER_GENERAL_LEDGERTYPE
+          value: ram
+        - name: CA_KEY_CERTIFICATE
+          value: peerOrg0_pk.pem
+        - name: ORDERER_GENERAL_BATCHTIMEOUT
+          value: 10s
+        - name: ORDERER_GENERAL_BATCHSIZE_MAXMESSAGECOUNT
+          value: '10'
+        - name: ORDERER_GENERAL_MAXWINDOWSIZE
+          value: '1000'
+        - name: ORDERER_GENERAL_ORDERERTYPE
+          value: solo
+        - name: ORDERER_GENERAL_LOGLEVEL
+          value: debug
+        - name: ORDERER_GENERAL_LISTENADDRESS
+          value: 0.0.0.0
+        - name: ORDERER_GENERAL_LISTENPORT
+          value: '7050'
+        - name: ORDERER_RAMLEDGER_HISTORY_SIZE
+          value: '100'
+        image: sfhackfest22017/fabric-orderer:x86_64-0.7.0-snapshot-c7b3fe0
+        imagePullPolicy: ""
+        name: orderer
+        workingDir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+        ports:
+        - containerPort: 7050
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+status:
+  replicas: 0

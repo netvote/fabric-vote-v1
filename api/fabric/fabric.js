@@ -33,13 +33,17 @@ let helper = require('./helper.js');
 let client = new hfc();
 let chain;
 
+let orderer = process.env.ORDERER_GRPC_URL;
+let peers = process.env.PEER_GRPC_URLS.split(",");
+let eventhubUrl = process.env.EVENT_HUB_URL;
+
 init();
 
 function init() {
     chain = client.newChain(config.chainName);
-    chain.addOrderer(new Orderer(config.orderer.orderer_url));
-    for (let i = 0; i < config.peers.length; i++) {
-        chain.addPeer(new Peer(config.peers[i].peer_url));
+    chain.addOrderer(new Orderer(orderer));
+    for (let i = 0; i < peers.length; i++) {
+        chain.addPeer(new Peer(peers[i]));
     }
 }
 
@@ -47,7 +51,7 @@ module.exports.invoke = (func, jsonArg) => {
     return new Promise(function(resolve, reject) {
         let tx_id = null;
         let eventhub = new EventHub();
-        eventhub.setPeerAddr(config.events[0].event_url);
+        eventhub.setPeerAddr(eventhubUrl);
         eventhub.connect();
 
         hfc.newDefaultKeyValueStore({
