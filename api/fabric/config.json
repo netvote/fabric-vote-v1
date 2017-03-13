@@ -7,24 +7,24 @@
    "keyValueStore": "/tmp/fabric-client-kvs",
    "waitTime": "60000",
    "caserver": {
-      "ca_url": "http://docker.slanders.com:8054"
+      "ca_url": "http://192.168.99.100:8054"
    },
    "orderer": {
-      "orderer_url": "grpc://docker.slanders.com:8050"
+      "orderer_url": "grpc://192.168.99.100:8050"
    },
    "peers": [{
-      "peer_url": "grpc://docker.slanders.com:8051"
+      "peer_url": "grpc://192.168.99.100:8051"
    }, {
-      "peer_url": "grpc://docker.slanders.com:8055"
+      "peer_url": "grpc://192.168.99.100:8055"
    }, {
-      "peer_url": "grpc://docker.slanders.com:8056"
+      "peer_url": "grpc://192.168.99.100:8056"
    }],
    "events": [{
-      "event_url": "grpc://docker.slanders.com:8053"
+      "event_url": "grpc://192.168.99.100:8053"
    }, {
-      "event_url": "grpc://docker.slanders.com:9053"
+      "event_url": "grpc://192.168.99.100:9053"
    }, {
-      "event_url": "grpc://docker.slanders.com:10053"
+      "event_url": "grpc://192.168.99.100:10053"
    }],
    "users": [{
       "username": "admin",

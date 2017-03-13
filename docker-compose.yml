@@ -139,6 +139,15 @@ services:
     networks:
       - bridge
 
+  netvote_api:
+    container_name: netvote_api
+    build: ./api
+    image: netvote/api:latest
+    ports:
+      - 3000:3000
+    networks:
+      - bridge
+
   cli:
     container_name: cli
     image: sfhackfest22017/fabric-peer:x86_64-0.7.0-snapshot-c7b3fe0
