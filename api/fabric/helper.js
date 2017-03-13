@@ -15,6 +15,7 @@
  */
 'use strict';
 
+const uuidV4 = require('uuid/v4');
 let util = require('util');
 let User = require('fabric-client/lib/User.js');
 let utils = require('fabric-client/lib/utils.js');
@@ -105,7 +106,5 @@ module.exports.getArgs = function(chaincodeArgs) {
 };
 
 module.exports.getTxId = function() {
-	return utils.buildTransactionID({
-		length: 12
-	});
+    return uuidV4();
 };

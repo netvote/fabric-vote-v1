@@ -15,32 +15,34 @@
  */
 'use strict';
 
-var log4js = require('log4js');
-var logger = log4js.getLogger('Helper');
 
-var path = require('path');
-var util = require('util');
+let log4js = require('log4js');
+let logger = log4js.getLogger('Helper');
 
-var User = require('fabric-client/lib/User.js');
-var utils = require('fabric-client/lib/utils.js');
-var copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
+let path = require('path');
+let util = require('util');
 
-var config = require('./config.json');
+const uuidV4 = require('uuid/v4');
+let User = require('fabric-client/lib/User.js');
+let utils = require('fabric-client/lib/utils.js');
+let copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
+
+let config = require('./config.json');
 
 logger.setLevel('DEBUG');
 
 module.exports.getSubmitter = function(client) {
-	var users = config.users;
-	var username = users[0].username;
-	var password = users[0].secret;
-	var member;
+	let users = config.users;
+	let username = users[0].username;
+	let password = users[0].secret;
+	let member;
 	return client.getUserContext(username)
 		.then((user) => {
 			if (user && user.isEnrolled()) {
 				logger.info('Successfully loaded member from persistence');
 				return user;
 			} else {
-				var ca_client = new copService(config.caserver.ca_url);
+				let ca_client = new copService(config.caserver.ca_url);
 				// need to enroll it with CA server
 				return ca_client.enroll({
 					enrollmentID: username,
@@ -62,12 +64,12 @@ module.exports.getSubmitter = function(client) {
 		});
 };
 module.exports.processProposal = function(chain, results, proposalType) {
-	var proposalResponses = results[0];
+	let proposalResponses = results[0];
 	//logger.debug('deploy proposalResponses:'+JSON.stringify(proposalResponses));
-	var proposal = results[1];
-	var header = results[2];
-	var all_good = true;
-	for (var i in proposalResponses) {
+	let proposal = results[1];
+	let header = results[2];
+	let all_good = true;
+	for (let i in proposalResponses) {
 		let one_good = false;
 		if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
 			one_good = true;
@@ -83,12 +85,7 @@ module.exports.processProposal = function(chain, results, proposalType) {
 		// SDK will be enhanced to make these checks easier to perform.
 	}
 	if (all_good) {
-		if (proposalType == 'deploy') {
-			logger.info(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
-		} else {
-			logger.info('Successfully obtained transaction endorsements.');
-		}
-		var request = {
+		let request = {
 			proposalResponses: proposalResponses,
 			proposal: proposal,
 			header: header
@@ -101,15 +98,13 @@ module.exports.processProposal = function(chain, results, proposalType) {
 };
 
 module.exports.getArgs = function(chaincodeArgs) {
-	var args = [];
-	for (var i = 0; i < chaincodeArgs.length; i++) {
+	let args = [];
+	for (let i = 0; i < chaincodeArgs.length; i++) {
 		args.push(chaincodeArgs[i]);
 	}
 	return args;
 };
 
 module.exports.getTxId = function() {
-	return utils.buildTransactionID({
-		length: 12
-	});
+	return uuidV4();
 };

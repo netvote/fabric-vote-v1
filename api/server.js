@@ -13,6 +13,14 @@ app.post('/admin/ballot', function (req, res) {
     });
 });
 
+app.get('/admin/ballot/:ballotId', function (req, res) {
+    netvote.getBallotConfig(req.params.ballotId).then((result)=> {
+        res.send(result)
+    }).catch((err) =>{
+        res.sendStatus(500)
+    });
+});
+
 app.listen(3000, (req, res) => {
     console.log('Example app listening on port 3000!')
 });

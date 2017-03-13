@@ -15,6 +15,7 @@
     "fabric-ca-client": "^0.1.0",
     "log4js": "^0.6.38",
     "mongoose": "4.8.7",
+    "uuid": "3.0.1",
     "winston": "^2.2.0"
   }
 }

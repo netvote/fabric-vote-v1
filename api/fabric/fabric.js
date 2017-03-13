@@ -87,8 +87,8 @@ module.exports.invoke = (func, jsonArg) => {
                         console.error('Failed to receive transaction notification within the timeout period');
                     }, parseInt(config.waitTime));
 
-                    console.log("registering for events on "+tx_id.toString());
-                    eventhub.registerTxEvent(tx_id.toString(), (tx) => {
+                    console.log("registering for events on "+tx_id);
+                    eventhub.registerTxEvent(tx_id, (tx) => {
                         console.log("Transaction has been successfully committed");
                         clearTimeout(handle);
                         eventhub.disconnect();
