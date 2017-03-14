@@ -15,31 +15,36 @@
  */
 'use strict';
 
-const uuidV4 = require('uuid/v4');
-let util = require('util');
-let User = require('fabric-client/lib/User.js');
-let utils = require('fabric-client/lib/utils.js');
-let copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
+var log4js = require('log4js');
+var logger = log4js.getLogger('Helper');
+
+var path = require('path');
+var util = require('util');
+
+var User = require('fabric-client/lib/User.js');
+var utils = require('fabric-client/lib/utils.js');
+var copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
 
 let caUrl = process.env.CA_URL;
+logger.setLevel('DEBUG');
 
 module.exports.getSubmitter = function(client) {
-    var username =  process.env.CA_USERNAME;
-    var password =  process.env.CA_PASSWORD;
-	let member;
+	var username =  process.env.CA_USERNAME;
+	var password =  process.env.CA_PASS;
+	var member;
 	return client.getUserContext(username)
 		.then((user) => {
 			if (user && user.isEnrolled()) {
-				console.log('Successfully loaded member from persistence');
+				logger.info('Successfully loaded member from persistence');
 				return user;
 			} else {
-				let ca_client = new copService(caUrl);
+				var ca_client = new copService(caUrl);
 				// need to enroll it with CA server
 				return ca_client.enroll({
 					enrollmentID: username,
 					enrollmentSecret: password
 				}).then((enrollment) => {
-					console.log('Successfully enrolled user \'' + username + '\'');
+					logger.info('Successfully enrolled user \'' + username + '\'');
 
 					member = new User(username, client);
 					return member.setEnrollment(enrollment.key, enrollment.certificate);
@@ -48,26 +53,26 @@ module.exports.getSubmitter = function(client) {
 				}).then(() => {
 					return member;
 				}).catch((err) => {
-					console.error('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
+					logger.error('Failed to enroll and persist user. Error: ' + err.stack ? err.stack : err);
 					throw new Error('Failed to obtain an enrolled user');
 				});
 			}
 		});
 };
-
-module.exports.processProposal = function(results, proposalType) {
-	let proposalResponses = results[0];
-	let proposal = results[1];
-	let header = results[2];
-	let all_good = true;
-	for (let i in proposalResponses) {
+module.exports.processProposal = function(chain, results, proposalType) {
+	var proposalResponses = results[0];
+	//logger.debug('deploy proposalResponses:'+JSON.stringify(proposalResponses));
+	var proposal = results[1];
+	var header = results[2];
+	var all_good = true;
+	for (var i in proposalResponses) {
 		let one_good = false;
 		if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
 			one_good = true;
-			console.log("response data:"+new Buffer(proposalResponses[i].response.payload).toString("utf8"))
-			console.log(proposalType + ' proposal was good');
+			logger.info("response data:"+new Buffer(proposalResponses[i].response.payload).toString("utf8"))
+			logger.info(proposalType + ' proposal was good');
 		} else {
-			console.error(proposalType + ' proposal was bad');
+			logger.error(proposalType + ' proposal was bad');
 		}
 		all_good = all_good & one_good;
 		//FIXME:  App is supposed to check below things:
@@ -77,33 +82,32 @@ module.exports.processProposal = function(results, proposalType) {
 	}
 	if (all_good) {
 		if (proposalType == 'deploy') {
-			console.log(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
+			logger.info(util.format('Successfully sent Proposal and received ProposalResponse: Status - %s, message - "%s", metadata - "%s", endorsement signature: %s', proposalResponses[0].response.status, proposalResponses[0].response.message, proposalResponses[0].response.payload, proposalResponses[0].endorsement.signature));
 		} else {
-			console.log('Successfully obtained transaction endorsements.');
+			logger.info('Successfully obtained transaction endorsements.');
 		}
-		return {
+		var request = {
 			proposalResponses: proposalResponses,
 			proposal: proposal,
 			header: header
 		};
+		return chain.sendTransaction(request);
 	} else {
-		console.error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
+		logger.error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
 		throw new Error('Problems happened when examining proposal responses');
 	}
 };
 
-module.exports.submitTransaction = function(request, chain) {
-    return chain.sendTransaction(request);
-};
-
 module.exports.getArgs = function(chaincodeArgs) {
-	let args = [];
-	for (let i = 0; i < chaincodeArgs.length; i++) {
+	var args = [];
+	for (var i = 0; i < chaincodeArgs.length; i++) {
 		args.push(chaincodeArgs[i]);
 	}
 	return args;
 };
 
 module.exports.getTxId = function() {
-    return uuidV4();
+	return utils.buildTransactionID({
+		length: 12
+	});
 };

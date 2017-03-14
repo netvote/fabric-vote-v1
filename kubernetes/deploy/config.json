@@ -1,0 +1,31 @@
+{
+   "chainName": "fabric-client1",
+   "chaincodeID": "netvote-dev",
+   "channelID": "myc1",
+   "goPath": "../../test/fixtures",
+   "chaincodePath": "github.com/netvote",
+   "keyValueStore": "/tmp/fabric-client-kvs",
+   "waitTime": "30000",
+   "dockerfile_contents": "from hyperledger/fabric-ccenv\n COPY . $GOPATH/src/build-chaincode/\n  WORKDIR $GOPATH\n\n RUN go install build-chaincode && mv $GOPATH/bin/build-chaincode $GOPATH/bin/%s",
+   "deployRequest": {
+      "functionName": "init",
+      "args": []
+   },
+   "createBallotData": {
+      "Ballot": {
+         "Name": "Nov 8, 2016",
+         "Private": true,
+         "Active": true
+      },
+      "Decisions": [{
+         "Name": "What is your favorite color?",
+         "Options": [{
+            "Id": "red",
+            "Name": "Red"
+         },{
+            "Id": "blue",
+            "Name": "Blue"
+         }]
+      }]
+   }
+}

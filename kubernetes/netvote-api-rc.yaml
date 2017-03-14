@@ -25,6 +25,12 @@ spec:
           value: grpc://peer0:7051,grpc://peer1:7051,grpc://peer2:7051
         - name: EVENT_HUB_URL
           value: grpc://peer0:7053
+        - name: CA_URL
+          value: grpc://ca:7054
+        - name: CA_USERNAME
+          value: admin
+        - name: CA_PASSWORD
+          value: adminpw
         name: netvote-api
         ports:
         - containerPort: 3000
