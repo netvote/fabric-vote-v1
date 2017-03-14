@@ -37,74 +37,77 @@ let eventhub;
 let tx_id = null;
 
 if (!process.env.GOPATH){
-	process.env.GOPATH = config.goPath;
+    process.env.GOPATH = config.goPath;
 }
+
+let orderer = process.env.ORDERER_GRPC_URL;
+let peers = process.env.PEER_GRPC_URLS.split(",");
+let eventhubUrl = process.env.EVENT_HUB_URL;
 
 init();
 
 function init() {
-	chain = client.newChain(config.chainName);
-	chain.addOrderer(new Orderer(config.orderer.orderer_url));
-	eventhub = new EventHub();
-	eventhub.setPeerAddr(config.events[0].event_url);
-	eventhub.connect();
-	for (let i = 0; i < config.peers.length; i++) {
-		chain.addPeer(new Peer(config.peers[i].peer_url));
-	}
+    chain = client.newChain(config.chainName);
+    chain.addOrderer(new Orderer(orderer));
+    eventhub = new EventHub();
+    eventhub.setPeerAddr(eventhubUrl);
+    for (let i = 0; i < peers.length; i++) {
+        chain.addPeer(new Peer(peers[i]));
+    }
 }
 
 hfc.newDefaultKeyValueStore({
-	path: config.keyValueStore
+    path: config.keyValueStore
 }).then(function(store) {
-	client.setStateStore(store);
-	return helper.getSubmitter(client);
+    client.setStateStore(store);
+    return helper.getSubmitter(client);
 }).then(
-	function(admin) {
-		logger.info('Successfully obtained enrolled user to deploy the chaincode');
-
-		logger.info('Executing Deploy');
-		tx_id = helper.getTxId();
-		let nonce = utils.getNonce();
-		let args = helper.getArgs(config.deployRequest.args);
-		// send proposal to endorser
-		let request = {
-			chaincodePath: config.chaincodePath,
-			chaincodeId: config.chaincodeID,
-			fcn: config.deployRequest.functionName,
-			args: args,
-			chainId: config.channelID,
-			txId: tx_id,
-			nonce: nonce,
-			'dockerfile-contents': config.dockerfile_contents
-		};
-		return chain.sendDeploymentProposal(request);
-	}
+    function(admin) {
+        logger.info('Successfully obtained enrolled user to deploy the chaincode');
+        eventhub.connect();
+        logger.info('Executing Deploy');
+        tx_id = helper.getTxId();
+        let nonce = utils.getNonce();
+        let args = helper.getArgs(config.deployRequest.args);
+        // send proposal to endorser
+        let request = {
+            chaincodePath: config.chaincodePath,
+            chaincodeId: config.chaincodeID,
+            fcn: config.deployRequest.functionName,
+            args: args,
+            chainId: config.channelID,
+            txId: tx_id,
+            nonce: nonce,
+            'dockerfile-contents': config.dockerfile_contents
+        };
+        return chain.sendDeploymentProposal(request);
+    }
 ).then(
-	function(results) {
-		logger.info('Successfully obtained proposal responses from endorsers');
-		return helper.processProposal(chain, results, 'deploy');
-	}
+    function(results) {
+        logger.info('Successfully obtained proposal responses from endorsers');
+        return helper.processProposal(chain, results, 'deploy');
+    }
 ).then(
-	function(response) {
-		if (response.status === 'SUCCESS') {
-			logger.info('Successfully sent deployment transaction to the orderer.');
-			let handle = setTimeout(() => {
-				logger.error('Failed to receive transaction notification within the timeout period');
-				process.exit(1);
-			}, parseInt(config.waitTime));
+    function(response) {
+        if (response.status === 'SUCCESS') {
+            logger.info('Successfully sent deployment transaction to the orderer.');
+            let handle = setTimeout(() => {
+                logger.error('Failed to receive transaction notification within the timeout period');
+                process.exit(1);
+            }, parseInt(config.waitTime));
 
-			eventhub.registerTxEvent(tx_id.toString(), (tx) => {
-				logger.info('The chaincode transaction has been successfully committed');
-				clearTimeout(handle);
-				eventhub.disconnect();
-			});
-		} else {
-			logger.error('Failed to order the deployment endorsement. Error code: ' + response.status);
-		}
-	}
+            eventhub.registerTxEvent(tx_id.toString(), (tx) => {
+                logger.info('The chaincode transaction has been successfully committed');
+                clearTimeout(handle);
+                eventhub.disconnect();
+            });
+        } else {
+            logger.error('Failed to order the deployment endorsement. Error code: ' + response.status);
+        }
+    }
 ).catch(
-	function(err) {
-		eventhub.disconnect();
-		logger.error(err.stack ? err.stack : err);
-	}
+    function(err) {
+        eventhub.disconnect();
+        logger.error(err.stack ? err.stack : err);
+    }
 );
