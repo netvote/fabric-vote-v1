@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    app: netvote-deployer
+    service: netvote-deployer
+  name: netvote-deployer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    service: netvote-deployer
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: netvote-deployer
+    spec:
+      containers:
+      - image: gcr.io/netvote-160820/netvote/deployer:latest
+        command:
+        - sh
+        args: ["-c", "sleep 20; ./deploy.sh; tail -f /dev/null;"]
+        env:
+        - name: ORDERER_GRPC_URL
+          value: grpc://orderer:7050
+        - name: PEER_GRPC_URLS
+          value: grpc://peer0:7051,grpc://peer1:7051,grpc://peer2:7051
+        - name: EVENT_HUB_URL
+          value: grpc://peer0:7053
+        - name: CA_URL
+          value: http://ca:7054
+        - name: CA_USERNAME
+          value: admin
+        - name: CA_PASSWORD
+          value: adminpw
+        name: netvote-deployer
+        ports:
+        - containerPort: 3000
+        resources: {}
+        workingDir: /root/fabric-vote-v1
+      serviceAccountName: ""
+status:
+  replicas: 0

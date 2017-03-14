@@ -15,30 +15,30 @@
  */
 'use strict';
 
-var log4js = require('log4js');
-var logger = log4js.getLogger('Helper');
+let log4js = require('log4js');
+let logger = log4js.getLogger('Helper');
 
-var path = require('path');
-var util = require('util');
+let path = require('path');
+let util = require('util');
 
-var User = require('fabric-client/lib/User.js');
-var utils = require('fabric-client/lib/utils.js');
-var copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
+let User = require('fabric-client/lib/User.js');
+let utils = require('fabric-client/lib/utils.js');
+let copService = require('fabric-ca-client/lib/FabricCAClientImpl.js');
 
 let caUrl = process.env.CA_URL;
 logger.setLevel('DEBUG');
 
 module.exports.getSubmitter = function(client) {
-    var username =  process.env.CA_USERNAME;
-    var password =  process.env.CA_PASSWORD;
-    var member;
+    let username =  process.env.CA_USERNAME;
+    let password =  process.env.CA_PASSWORD;
+    let member;
     return client.getUserContext(username)
         .then((user) => {
             if (user && user.isEnrolled()) {
                 logger.info('Successfully loaded member from persistence');
                 return user;
             } else {
-                var ca_client = new copService(caUrl);
+                let ca_client = new copService(caUrl);
                 // need to enroll it with CA server
                 return ca_client.enroll({
                     enrollmentID: username,
@@ -60,12 +60,12 @@ module.exports.getSubmitter = function(client) {
         });
 };
 module.exports.processProposal = function(chain, results, proposalType) {
-    var proposalResponses = results[0];
+    let proposalResponses = results[0];
     //logger.debug('deploy proposalResponses:'+JSON.stringify(proposalResponses));
-    var proposal = results[1];
-    var header = results[2];
-    var all_good = true;
-    for (var i in proposalResponses) {
+    let proposal = results[1];
+    let header = results[2];
+    let all_good = true;
+    for (let i in proposalResponses) {
         let one_good = false;
         if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
             one_good = true;
@@ -86,7 +86,7 @@ module.exports.processProposal = function(chain, results, proposalType) {
         } else {
             logger.info('Successfully obtained transaction endorsements.');
         }
-        var request = {
+        let request = {
             proposalResponses: proposalResponses,
             proposal: proposal,
             header: header
@@ -99,8 +99,8 @@ module.exports.processProposal = function(chain, results, proposalType) {
 };
 
 module.exports.getArgs = function(chaincodeArgs) {
-    var args = [];
-    for (var i = 0; i < chaincodeArgs.length; i++) {
+    let args = [];
+    for (let i = 0; i < chaincodeArgs.length; i++) {
         args.push(chaincodeArgs[i]);
     }
     return args;

@@ -18,6 +18,9 @@ spec:
     spec:
       containers:
       - command:
+        - sh
+        args: ["-c", "ln -s /root/.fabric-ca/$CERT_ID /etc/hyperledger/fabric/msp/sampleconfig; node start --peer-defaultchain=false"]
+      - command:
         - peer
         args: ["node", "start", "--peer-defaultchain=false"]
         env:
@@ -33,6 +36,8 @@ spec:
           value: 'true'
         - name: CORE_PEER_ENDORSER_ENABLED
           value: 'true'
+        - name: CERT_ID
+          value: peer1
         - name: CORE_PEER_ID
           value: peer1
         - name: CORE_PEER_PROFILE_ENABLED
@@ -43,7 +48,7 @@ spec:
           value: 'true'
         - name: CORE_PEER_GOSSIP_IGNORESECURITY
           value: 'true'
-        image: sfhackfest22017/fabric-peer:x86_64-0.7.0-snapshot-c7b3fe0
+        image: gcr.io/netvote-160820/netvote/fabric-peer
         imagePullPolicy: ""
         name: peer1
         workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer

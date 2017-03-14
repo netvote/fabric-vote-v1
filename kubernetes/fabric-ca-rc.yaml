@@ -19,13 +19,13 @@ spec:
       containers:
       - command:
         - sh
-        args: ["-c", "sleep 10; fabric-ca server start -ca /.fabric-ca/$$CA_CERTIFICATE -ca-key /.fabric-ca/$$CA_KEY_CERTIFICATE -config /etc/hyperledger/fabric-ca/server-config.json -address '0.0.0.0'"]
+        args: ["-c", "sleep 10; fabric-ca server start -ca /root/$$CA_CERTIFICATE -ca-key /root/$$CA_KEY_CERTIFICATE -config /etc/hyperledger/fabric-ca/server-config.json -address '0.0.0.0'"]
         env:
         - name: CA_CERTIFICATE
           value: peerOrg0_cert.pem
         - name: CA_KEY_CERTIFICATE
           value: peerOrg0_pk.pem
-        image: sfhackfest22017/fabric-ca:x86_64-0.7.0-snapshot-6294c57
+        image: gcr.io/netvote-160820/netvote/fabric-ca
         imagePullPolicy: ""
         name: ca
         ports:

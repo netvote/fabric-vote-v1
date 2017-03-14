@@ -1,3 +1,3 @@
 git pull
 
-node deploy
+GOPATH=$PWD node deploy
