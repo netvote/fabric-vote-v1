@@ -26,7 +26,7 @@ spec:
         - name: EVENT_HUB_URL
           value: grpc://peer0:7053
         - name: CA_URL
-          value: grpc://ca:7054
+          value: http://ca:7054
         - name: CA_USERNAME
           value: admin
         - name: CA_PASSWORD

@@ -30,7 +30,7 @@ logger.setLevel('DEBUG');
 
 module.exports.getSubmitter = function(client) {
     var username =  process.env.CA_USERNAME;
-    var password =  process.env.CA_PASS;
+    var password =  process.env.CA_PASSWORD;
     var member;
     return client.getUserContext(username)
         .then((user) => {
