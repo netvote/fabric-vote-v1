@@ -19,15 +19,12 @@ spec:
       containers:
       - command:
         - sh
-        args: ["-c", "ln -s /root/.fabric-ca/$CERT_ID /etc/hyperledger/fabric/msp/sampleconfig; node start --peer-defaultchain=false"]
-      - command:
-        - peer
-        args: ["node", "start", "--peer-defaultchain=false"]
+        args: ["-c", "ln -s /root/.fabric-ca/$$CERT_ID /etc/hyperledger/fabric/msp/sampleconfig; peer node start --peer-defaultchain=false"]
         env:
         - name: CORE_PEER_ADDRESSAUTODETECT
           value: 'true'
         - name: CORE_VM_ENDPOINT
-          value: unix:///host/var/run/docker.sock.pem
+          value: unix:///var/run/docker.sock
         - name: CORE_LOGGING_LEVEL
           value: DEBUG
         - name: CORE_PEER_NETWORKID
@@ -56,7 +53,15 @@ spec:
         - containerPort: 7051
         - containerPort: 7053
         resources: {}
+        volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+            readOnly: false
       restartPolicy: Always
       serviceAccountName: ""
+      volumes:
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
 status:
   replicas: 0

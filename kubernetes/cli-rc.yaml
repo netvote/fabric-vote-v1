@@ -3,65 +3,53 @@ kind: ReplicationController
 metadata:
   creationTimestamp: null
   labels:
-    service: peer1
-  name: peer1
+    service: cli
+  name: cli
   namespace: default
 spec:
   replicas: 1
   selector:
-    service: peer1
+    service: cli
   template:
     metadata:
       creationTimestamp: null
       labels:
-        service: peer1
+        service: cli
     spec:
       containers:
       - command:
         - sh
-        args: ["-c", "ln -s /root/.fabric-ca/$$CERT_ID /etc/hyperledger/fabric/msp/sampleconfig; peer node start --peer-defaultchain=false"]
+        args: ["-c", "ln -s /root/.fabric-ca/$$CERT_ID /etc/hyperledger/fabric/msp/sampleconfig; sleep 30; ./channel_test.sh; sleep 10000"]
         env:
         - name: CORE_PEER_ADDRESSAUTODETECT
           value: 'true'
+        - name: CORE_PEER_ADDRESS
+          value: peer0:7051
         - name: CORE_VM_ENDPOINT
-          value: unix:///var/run/docker.sock
+          value: unix:///host/var/run/docker.sock
         - name: CORE_LOGGING_LEVEL
           value: DEBUG
-        - name: CORE_PEER_NETWORKID
-          value: peer1
         - name: CORE_NEXT
           value: 'true'
         - name: CORE_PEER_ENDORSER_ENABLED
           value: 'true'
         - name: CERT_ID
-          value: peer1
+          value: peer3
         - name: CORE_PEER_ID
-          value: peer1
-        - name: CORE_PEER_PROFILE_ENABLED
-          value: 'true'
+          value: cli
         - name: CORE_PEER_COMMITTER_LEDGER_ORDERER
           value: orderer:7050
-        - name: CORE_PEER_GOSSIP_ORGLEADER
-          value: 'true'
-        - name: CORE_PEER_GOSSIP_IGNORESECURITY
-          value: 'true'
+        - name: GOPATH
+          value: '/opt/gopath'
         image: gcr.io/netvote-160820/netvote/fabric-peer
         imagePullPolicy: ""
-        name: peer1
-        workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+        name: cli
+        workingDir: /root
         ports:
         - containerPort: 7051
         - containerPort: 7053
         resources: {}
-        volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
-            readOnly: false
       restartPolicy: Always
       serviceAccountName: ""
-      volumes:
-        - name: docker-socket
-          hostPath:
-            path: /var/run/docker.sock
 status:
   replicas: 0

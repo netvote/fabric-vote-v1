@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    app: ccenv
+    service: ccenv
+  name: ccenv
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    service: ccenv
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: ccenv
+    spec:
+      containers:
+      - image: sfhackfest22017/fabric-ccenv:x86_64-0.7.0-snapshot-c7b3fe0
+        name: ccenv
+        ports:
+        - containerPort: 3000
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+status:
+  replicas: 0
