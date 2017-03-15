@@ -80,6 +80,9 @@ hfc.newDefaultKeyValueStore({
             nonce: nonce,
             'dockerfile-contents': config.dockerfile_contents
         };
+
+        logger.info(JSON.stringify(request));
+
         return chain.sendDeploymentProposal(request);
     }
 ).then(
