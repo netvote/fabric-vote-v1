@@ -20,7 +20,7 @@ spec:
       - image: gcr.io/netvote-160820/netvote/deployer:latest
         command:
         - sh
-        args: ["-c", "sleep 60; ./deploy.sh; tail -f /dev/null;"]
+        args: ["-c", "sleep 180; ./deploy.sh; tail -f /dev/null;"]
         env:
         - name: ORDERER_GRPC_URL
           value: grpc://orderer:7050

@@ -6,7 +6,6 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"encoding/json"
-	"os"
 	"time"
 	"strconv"
 	"sort"
@@ -69,12 +68,11 @@ type Ballot struct{
 	Active bool
 }
 
-func (t *Ballot) ActiveElection()(bool){
-	return t.Active || t.ActiveDates()
+func (t *Ballot) ActiveElection(now int)(bool){
+	return t.Active || t.ActiveDates(now)
 }
 
-func (t *Ballot) ActiveDates()(bool){
-	now := getNow()
+func (t *Ballot) ActiveDates(now int)(bool){
 	begins_in_past := (t.StartTimeSeconds <= now)
 	ends_in_future := (t.EndTimeSeconds >= now)
 	return begins_in_past && ends_in_future
@@ -160,7 +158,7 @@ func validate(stateDao StateDAO, vote Vote){
 
 	ballot := stateDao.GetBallot(vote.BallotId)
 
-	if(!ballot.ActiveElection()){
+	if(!ballot.ActiveElection(stateDao.timeInSeconds)){
 		panic("This ballot is not active")
 	}
 
@@ -173,7 +171,7 @@ func validate(stateDao StateDAO, vote Vote){
 			panic("All selections must be made")
 		}
 		if(d.Repeatable){
-			if(alreadyVoted(voter, d)){
+			if(alreadyVoted(stateDao, voter, d)){
 				panic("Already voted this period")
 			}
 		}
@@ -193,9 +191,14 @@ func validate(stateDao StateDAO, vote Vote){
 	}
 }
 
-func alreadyVoted(voter Voter, decision Decision)(bool){
+func alreadyVoted(stateDao StateDAO, voter Voter, decision Decision)(bool){
 	decisionHistory :=  voter.DecisionTimestamps[decision.BallotId][decision.Id];
-	return (len(decisionHistory) > 0 && (decisionHistory[len(decisionHistory)-1] > (getNow()-decision.RepeatVoteDelaySeconds)))
+	votedBefore := len(decisionHistory) > 0
+
+	if(votedBefore && decision.Repeatable){
+		votedBefore = (decisionHistory[len(decisionHistory)-1] > (stateDao.timeInSeconds-decision.RepeatVoteDelaySeconds))
+	}
+	return votedBefore
 }
 
 func addBallotDecisionsToVoter(stateDao StateDAO, ballot Ballot, voter *Voter, save bool){
@@ -296,15 +299,25 @@ func getAttributesForVote(voter Voter, vote Vote)(map[string]string){
 	return attributes
 }
 
-func castVote(stateDao StateDAO, vote Vote){
-	validate(stateDao, vote)
+func initializeVoterFromVote(stateDao StateDAO, vote Vote)(Voter){
 	voter := stateDao.GetVoter(vote.VoterId)
+	if(voter.Id == ""){
+		voter = lazyInitVoter(stateDao, Voter{ Id: vote.VoterId })
+		ballot := stateDao.GetBallot(vote.BallotId)
+		addBallotDecisionsToVoter(stateDao, ballot, &voter, true)
+	}
+	return voter
+}
+
+func castVote(stateDao StateDAO, vote Vote){
+	voter := initializeVoterFromVote(stateDao, vote)
+	validate(stateDao, vote)
 	results_array := make([]DecisionResults, 0)
 
 	dimensions := getDimensionsForVote(voter, vote)
 	attributes := getAttributesForVote(voter, vote)
 
-	now := getNow()
+	now := stateDao.timeInSeconds
 
 	for _, voter_decision := range vote.Decisions {
 
@@ -348,14 +361,6 @@ func castVote(stateDao StateDAO, vote Vote){
 	}
 
 	stateDao.setVoteEvent(voteEvent)
-}
-
-func getNow() (int){
-	if(os.Getenv("TEST_TIME") != ""){
-		i, _ := strconv.Atoi(os.Getenv("TEST_TIME"))
-		return i
-	}
-	return int(time.Now().Unix())
 }
 
 func hasRole(stub shim.ChaincodeStubInterface, role string) (bool){
@@ -438,7 +443,15 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 		}
 	}()
 
-	stateDao := StateDAO{Stub: stub}
+	if(len(args) < 2){
+		panic("both payload, and timestampInSeconds are required")
+	}
+	time, er := strconv.Atoi(args[1])
+	if(er != nil){
+		panic("error converting time in seconds from arg[1]")
+	}
+
+	stateDao := StateDAO{Stub: stub, timeInSeconds: time}
 
 	switch function {
 		// INVOKE
@@ -515,7 +528,7 @@ func getActiveDecisions(stateDao StateDAO, voter Voter)([]Decision){
 		for decisionId, _ := range decisionIdMap {
 			if (decisionIdMap[decisionId] > 0) {
 				decision := stateDao.GetDecision(ballotId, decisionId)
-				if (!decision.Repeatable || !alreadyVoted(voter, decision)) {
+				if (!decision.Repeatable || !alreadyVoted(stateDao, voter, decision)) {
 					result = append(result, decision)
 				}
 			}
@@ -602,6 +615,7 @@ func main() {
 // This class contains the accessors for getting/putting state from the blockchian
 type StateDAO struct{
 	Stub shim.ChaincodeStubInterface
+	timeInSeconds int
 }
 
 //object types

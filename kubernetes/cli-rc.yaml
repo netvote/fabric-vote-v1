@@ -19,7 +19,7 @@ spec:
       containers:
       - command:
         - sh
-        args: ["-c", "ln -s /root/.fabric-ca/$$CERT_ID /etc/hyperledger/fabric/msp/sampleconfig; sleep 30; ./channel_test.sh; sleep 10000"]
+        args: ["-c", "ln -s /root/.fabric-ca/$$CERT_ID /etc/hyperledger/fabric/msp/sampleconfig; sleep 120; ./channel_test.sh; sleep 10000"]
         env:
         - name: CORE_PEER_ADDRESSAUTODETECT
           value: 'true'
