@@ -1,0 +1,44 @@
+swagger: "2.0"
+x-google-allow: all
+info:
+  description: "API for blockchain voting transactions"
+  title: "Netvote API"
+  version: "1.0.0"
+host: "echo-api.endpoints.netvote-160820.cloud.goog"
+# [END swagger]
+basePath: "/api/v1"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+schemes:
+- "http"
+paths:
+  "/ballot":
+    post:
+      description: "Add a new Ballot."
+      operationId: "createBallotConfig"
+      produces:
+      - "application/json"
+      parameters:
+        -
+          name: "ballot"
+          in: "body"
+          description: "Ballot to add to the store"
+          required: true
+          schema:
+            type: "object"
+      responses:
+        200:
+          description: "Resulting ballot"
+
+
+# This section requires all requests to any path to require an API key.
+security:
+- api_key: []
+securityDefinitions:
+  # This section configures basic authentication with an API key.
+  api_key:
+    type: "apiKey"
+    name: "key"
+    in: "query"

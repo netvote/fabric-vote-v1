@@ -6,7 +6,8 @@ metadata:
 spec:
   ports:
   - port: 80
-    targetPort: 3000
+    targetPort: 8081
+    protocol: TCP
   selector:
     service: netvote-api
   type: "LoadBalancer"

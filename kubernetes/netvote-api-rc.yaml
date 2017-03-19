@@ -7,7 +7,7 @@ metadata:
   name: netvote-api
   namespace: default
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     service: netvote-api
   template:
@@ -17,6 +17,16 @@ spec:
         service: netvote-api
     spec:
       containers:
+      - name: esp
+        image: b.gcr.io/endpoints/endpoints-runtime:0.3
+        args: [
+                "-p", "8081",
+                "-a", "127.0.0.1:3000",
+                "-s", "echo-api.endpoints.netvote-160820.cloud.goog",
+                "-v", "2017-03-19r2",
+              ]
+        ports:
+          - containerPort: 8081
       - image: gcr.io/netvote-160820/netvote/api:latest
         env:
         - name: ORDERER_GRPC_URL
@@ -31,6 +41,14 @@ spec:
           value: admin
         - name: CA_PASSWORD
           value: adminpw
+        - name: FIREBASE_DATABASE_URL
+          value: https://netvote-160820.firebaseio.com
+        - name: FIREBASE_PROJECT_ID
+          value: netvote-160820
+        - name: FIREBASE_CLIENT_EMAIL
+          value: firebase-adminsdk-7t47z@netvote-160820.iam.gserviceaccount.com
+        - name: FIREBASE_PRIVATE_KEY
+          value: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDT0cYvSp9Who+s\nP4F19en564XVGod03Be8HNpegUphH8AqA3WLMDJiI2bmz7nLFi1lRsW2BjaRBGHZ\nLeYYjWd5UTcIFhTKEAuyIdDNVyUhX1wLZV1ZcuF3me7JC87FGGuSkO52bE7ja8bo\ntAEUCQqugpmGfVlp7GnpFthEXAaOMUlWWOZRgUaa5DfxWZU02gp+tn1mIm5NkFXW\ntjx26lZn7tcJjz17jxRLZxUC+iyFXXrnqofM9tsB+rAwb69WQNXUzOllYJ/kVSY+\nDU2XOnp0hCjp5whDw2UZE1wIWMCPsEq1IPAkNT9N00DyY5fPmBf430mJuvaPwZcO\nwH2I+4PpAgMBAAECggEAOGFJwyS1rK48Z7ivmNpP4PnTsZlSHMTIfIWhii4XwipV\nV9l73ASEJKMPrLf12BybEK35yi11MLxd3xTcfgSFWkFHyJs4BWCn/E4L6dwcQfnD\n4jSk2D4/zTnn2ROPgd6yI1z4XAUQKnBxjVb8Qnz1nuWcP7P1rMAEoMo33lowVIBF\npH0BiwDbZHGsmm//RoWUeUeu0E4FBtXae3Cs6PYRKU/2Kmm0GEuGXAwKWf7aTw0T\nzHyq1txuUCu2L+1N+3JuxazrCSSb7sMquBV45QB2J3770dd9OT9rQzzGIqKqYtig\n37ICBPfaMHsJqRqU3xCLxrclSlj5h0ofQBc+TROJ0QKBgQD5tjj/99Eo03Z8elU7\nh4C02CXVT9aq6l+xzemySBpWytMPh0+RVMR85dK+8Gs+j9zmSQS2pb8zS62Hh2or\nKhzTDUstx3z1qmV+aEviPxj0tL3qydhBEiVxVyL3/9TFEHUUxlN8wPPjunCOKjWp\no8mZKj+HfgM0vLgO+pDjAGVvFwKBgQDZJ0bZJGjvJoKsb36LAjg9xo4wkdoJpDCQ\nDoFlWkRfqNUcEE9PI1ViCveB86nPhforZwzKWcVJQGXWe4jsH3R1e1Dh3Dx3KiiT\nLs3KhdcKtcdAKu2B+SLYqCsSn0A5o+9BFNuhqPdJubM0zhrSu6os/LiWwqi7L+i9\nDe1LOOaE/wKBgD2ibI9Ba67YAvbWexMmbu40K6JrAmFNWDFa0cPfaCDkDxRWIZ2N\nfrIVR985GD9o4u00OKWcY4UVuM8q7VmaG2M8dMHn6z/3vvVkaNZ/HHnJ4taA24+0\nGunOyCLOUoYRedSW3yR7u7cJ3Z45bOViN/BGLUgUIlZx/jw0PG7LOj4hAoGAGdMz\n98r+t8JKtBsmX33KFn6wllIiLhdatycieF092GqJvaaq5+x50Qkg2lGSFl4GnHbK\n7J20eruv4MwcQoiTHw2lVtcMUdevr6FXVAiKxHlN0vHIATcRz9ZgGPzbdH9sir7i\nR92CW0A8ccE5K2qqGGONyFAqJOjTsvgfCl0f/R0CgYEAnIDPrMkYoNFLpJbju3Hg\npFBTxaHuAbwJ5Y+X1fOyqXLEes5etV4totlIA4YXqTxPN2hieZlxYQt2gNWdyG1D\nv/zgxOQfoVeKdmUJklwVV/CQTCZZQ+7N5T/5gTDoKttiF36GJq/vMGHSoR/c7Gpg\nirVNcDym2PaXBVsR6Mp/Bco=\n-----END PRIVATE KEY-----\n"
         name: netvote-api
         ports:
         - containerPort: 3000

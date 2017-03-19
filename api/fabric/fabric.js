@@ -47,7 +47,7 @@ function init() {
     }
 }
 
-module.exports.invoke = (func, jsonArg) => {
+module.exports.invoke = (func, jsonArg, commitHandler) => {
     return new Promise(function(resolve, reject) {
         let tx_id = null;
         let eventhub = new EventHub();
@@ -63,7 +63,7 @@ module.exports.invoke = (func, jsonArg) => {
             function (admin) {
                 tx_id = helper.getTxId();
                 let nonce = utils.getNonce();
-                let args = helper.getArgs([func, JSON.stringify(jsonArg)]);
+                let args = helper.getArgs([func, JSON.stringify(jsonArg), ""+Math.floor(new Date().getTime())]);
 
                 let request = {
                     chaincodeId: config.chaincodeID,
@@ -89,6 +89,12 @@ module.exports.invoke = (func, jsonArg) => {
                 if (response.status === 'SUCCESS') {
                     let handle = setTimeout(() => {
                         console.error('Failed to receive transaction notification within the timeout period');
+                        if (commitHandler != undefined) {
+                            commitHandler({
+                                result: "failed",
+                                error: "timed out"
+                            });
+                        }
                     }, parseInt(config.waitTime));
 
                     console.log("registering for events on "+tx_id);
@@ -96,6 +102,11 @@ module.exports.invoke = (func, jsonArg) => {
                         console.log("Transaction has been successfully committed");
                         clearTimeout(handle);
                         eventhub.disconnect();
+                        if (commitHandler != undefined) {
+                            commitHandler({
+                                result: "success"
+                            });
+                        }
                     });
                 }
             }

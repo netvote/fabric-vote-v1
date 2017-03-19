@@ -1,7 +1,18 @@
 let fabric = require("../fabric/fabric.js");
 const uuidV4 = require('uuid/v4');
+let admin = require("firebase-admin");
 
-module.exports.addBallot = (ballot) => {
+let firebase = admin.initializeApp({
+    credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL
+});
+
+module.exports.addBallot = (payload) => {
+    let ballot = payload.ballot;
     return new Promise(function(resolve, reject) {
 
         ballot.Ballot.Id = uuidV4();
@@ -10,7 +21,9 @@ module.exports.addBallot = (ballot) => {
             decision.Id = uuidV4();
         }
 
-        fabric.invoke("add_ballot", ballot).then((result) => {
+        fabric.invoke("add_ballot", ballot, (commitResult) => {
+            firebase.database().ref(payload.callbackRef).update({status: commitResult.result})
+        }).then((result) => {
             resolve(result)
         }).catch((err)=>{
             reject(err)
