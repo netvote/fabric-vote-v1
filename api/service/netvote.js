@@ -26,7 +26,6 @@ module.exports.addBallot = (payload) => {
         }).then((result) => {
             let ballotResults = JSON.parse(result.toString());
             ballotResults.Decisions = ballot.Decisions;
-            console.log("result="+JSON.stringify(ballotResults));
             resolve(JSON.stringify(ballotResults))
         }).catch((err)=>{
             reject(err)
