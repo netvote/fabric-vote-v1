@@ -71,6 +71,7 @@ func checkInvoke(t *testing.T, stub *shim.MockStub, function string, args []stri
 func checkInvokeTX(t *testing.T, stub *shim.MockStub, transactionId string, function string, args []string) {
 	args = append([]string{function}, args...)
 	resp := stub.MockInvoke("DOESNTMATTER", to_byte_array(function, args))
+	fmt.Println("payload="+string(resp.Payload))
 	if resp.Status != 200 {
 		fmt.Println("Invoke", args, "failed", resp.Message)
 		t.FailNow()
