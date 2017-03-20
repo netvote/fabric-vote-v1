@@ -24,7 +24,10 @@ module.exports.addBallot = (payload) => {
         fabric.invoke("add_ballot", ballot, (commitResult) => {
             firebase.database().ref(payload.callbackRef).update({status: commitResult.result})
         }).then((result) => {
-            resolve(result)
+            let ballotResults = JSON.parse(result.toString());
+            ballotResults.Decisions = ballot.Decisions;
+            console.log("result="+JSON.stringify(ballotResults));
+            resolve(JSON.stringify(ballotResults))
         }).catch((err)=>{
             reject(err)
         });

@@ -81,7 +81,7 @@ module.exports.invoke = (func, jsonArg, commitHandler) => {
             function (results) {
                 console.log('Obtained proposal responses from endorsers');
                 let request = helper.processProposal(results, func);
-                resolve(request.proposalResponses[0].response.payload)
+                resolve(request.proposalResponses[0].response.payload);
                 return  helper.submitTransaction(request, chain);
             }
         ).then(
