@@ -459,7 +459,7 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 			var ballotDecisions BallotDecisions
 			parseArg(args[0], &ballotDecisions)
 			ballot := addBallot(stateDao, ballotDecisions)
-			result, err = json.Marshal(stateDao.GetBallotDecisions(ballot.Id))
+			result, err = json.Marshal(ballot)
 		case FUNC_DELETE_BALLOT:
 			var ballot_payload Ballot
 			parseArg(args[0], &ballot_payload)
