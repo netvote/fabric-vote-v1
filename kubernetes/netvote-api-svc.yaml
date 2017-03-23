@@ -11,3 +11,4 @@ spec:
   selector:
     service: netvote-api
   type: "LoadBalancer"
+  loadBalancerIP: 104.198.240.210
