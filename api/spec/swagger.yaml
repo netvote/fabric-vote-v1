@@ -4,7 +4,7 @@ info:
   description: "API for blockchain voting transactions"
   title: "Netvote API"
   version: "1.0.0"
-host: "echo-api.endpoints.netvote-160820.cloud.goog"
+host: "api.endpoints.netvote-160820.cloud.goog"
 # [END swagger]
 basePath: "/api/v1"
 consumes:

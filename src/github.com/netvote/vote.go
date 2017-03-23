@@ -42,6 +42,7 @@ type VoteChaincode struct {
 type Option struct {
 	Id string
 	Name string
+	Description string
 	Attributes map[string]string
 }
 

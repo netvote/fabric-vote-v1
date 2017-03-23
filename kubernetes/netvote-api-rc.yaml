@@ -22,8 +22,8 @@ spec:
         args: [
                 "-p", "8081",
                 "-a", "127.0.0.1:3000",
-                "-s", "echo-api.endpoints.netvote-160820.cloud.goog",
-                "-v", "2017-03-19r2",
+                "-s", "api.endpoints.netvote-160820.cloud.goog",
+                "-v", "2017-03-22r0",
               ]
         ports:
           - containerPort: 8081
