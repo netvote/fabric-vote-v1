@@ -50,6 +50,7 @@ type Decision struct {
 	Id                string
 	Name              string
 	BallotId          string
+	Description	  string
 	Options           []Option
 	Attributes map[string]string
 	ResponsesRequired int
