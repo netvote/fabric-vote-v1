@@ -39,6 +39,11 @@ const QUERY_GET_ACCOUNT_BALLOTS = "get_account_ballots"
 type VoteChaincode struct {
 }
 
+type StatusError struct {
+	Code int
+	Message string
+}
+
 type Option struct {
 	Id string
 	Name string
@@ -150,33 +155,38 @@ func stringInSlice(a string, list []Option) bool {
 	return false
 }
 
+func doPanic(statusCode int, message string){
+	json, _ := json.Marshal(StatusError {Code: statusCode, Message: message})
+	panic(string(json))
+}
+
 func validate(stateDao StateDAO, vote Vote, voter Voter){
 
 	printJson("validate voter", voter)
 	printJson("validate vote", vote)
 	if(vote.BallotId == ""){
 		//TODO: for now, this is required
-		panic("BallotId is required")
+		doPanic(400, "BallotId is required")
 	}
 
 	ballot := stateDao.GetBallot(vote.BallotId)
 
 	if(!ballot.ActiveElection(stateDao.timeInSeconds)){
-		panic("This ballot is not active")
+		doPanic(403, "This ballot is not active")
 	}
 
 	for _, decision := range vote.Decisions {
 		d := stateDao.GetDecision(vote.BallotId, decision.DecisionId)
 
 		if(voter.DecisionIdToVoteCount == nil || voter.DecisionIdToVoteCount[vote.BallotId][decision.DecisionId] == 0) {
-			panic("This voter has no votes")
+			doPanic(403, "This voter has no votes")
 		}
 		if(d.ResponsesRequired != len(decision.Selections)){
-			panic("All selections must be made")
+			doPanic(400, "All selections must be made")
 		}
 		if(d.Repeatable){
 			if(alreadyVoted(stateDao, voter, d)){
-				panic("Already voted this period")
+				doPanic(403, "Already voted this period")
 			}
 		}
 		var total int= 0
@@ -185,12 +195,12 @@ func validate(stateDao StateDAO, vote Vote, voter Voter){
 		}
 		if(total != voter.DecisionIdToVoteCount[vote.BallotId][decision.DecisionId]){
 			printJson("DecisionId", decision.DecisionId)
-			panic("Values must add up to exactly ResponsesRequired")
+			doPanic(400, "Values must add up to exactly ResponsesRequired")
 		}
 
 		for k,_ := range decision.Selections {
 			if(!stringInSlice(k, d.Options)){
-				panic("Invalid option: "+k)
+				doPanic(400, "Invalid option: "+k)
 			}
 		}
 	}
@@ -244,7 +254,7 @@ func addBallot(stateDao StateDAO, ballotDecisions BallotDecisions) (Ballot){
 	ballot := ballotDecisions.Ballot
 	ballot.Decisions = []string{}
 	if(ballot.Id == ""){
-		panic("ballot id is required")
+		doPanic(400, "ballot id is required")
 	}
 
 	for _, decision := range ballotDecisions.Decisions {
@@ -379,10 +389,10 @@ func addDecisionToChain(stateDao StateDAO, decision Decision) (Decision){
 		decision.ResponsesRequired = 1
 	}
 	if(decision.BallotId == ""){
-		panic("ballotId is required for decision")
+		doPanic(400, "ballotId is required for decision")
 	}
 	if(decision.Id == ""){
-		panic("Id is required for decision")
+		doPanic(400, "Id is required for decision")
 	}
 	results := DecisionResults { Id: decision.Id, Results: make(map[string]map[string]int)}
 	stateDao.SaveDecision(decision)
@@ -410,7 +420,7 @@ func addVoter(stateDao StateDAO, voter Voter){
 func parseArg(arg string, value interface{}){
 	var arg_bytes = []byte(arg)
 	if err := json.Unmarshal(arg_bytes, &value); err != nil {
-		panic(err)
+		doPanic(500, "error parsing arg: "+arg)
 	}
 }
 
@@ -451,14 +461,14 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 	}()
 
 	if(len(args) < 2){
-		panic("both payload, and timestampInSeconds are required")
+		doPanic(400, "both payload, and timestampInSeconds are required")
 	}
-	time, er := strconv.Atoi(args[1])
+	timeInSeconds, er := strconv.Atoi(args[1])
 	if(er != nil){
-		panic("error converting time in seconds from arg[1]")
+		doPanic(400, "error converting time in seconds from arg[1]")
 	}
 
-	stateDao := StateDAO{Stub: stub, timeInSeconds: time}
+	stateDao := StateDAO{Stub: stub, timeInSeconds: timeInSeconds}
 
 	switch function {
 		// INVOKE
@@ -521,7 +531,7 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 			parseArg(args[0], &ballot_obj)
 			result, err = json.Marshal(stateDao.GetBallotDecisions(ballot_obj.Id))
 		default:
-			panic("Invalid Function: "+function)
+			doPanic(400, "Invalid Function: "+function)
 	}
 
 	return shim.Success(result)
@@ -557,7 +567,7 @@ func getBallotResults(stateDao StateDAO, ballotId string) BallotResults{
 
 func getVoterBallots(stateDao StateDAO, voterId string) []Ballot{
 	if (voterId == "") {
-		panic("VoterId and BallotId are required")
+		doPanic(400, "VoterId and BallotId are required")
 	}
 	voter := stateDao.GetVoter(voterId)
 	active_decisions := getActiveDecisions(stateDao, voter)
@@ -582,7 +592,7 @@ func getVoterBallots(stateDao StateDAO, voterId string) []Ballot{
 
 func getVoterBallotDecisions(stateDao StateDAO, voterId string, ballotId string) []Decision{
 	if(ballotId == "" || voterId == ""){
-		panic("VoterId and BallotId are required")
+		doPanic(400, "VoterId and BallotId are required")
 	}
 	voter := stateDao.GetVoter(voterId)
 	decisions := make([]Decision,0)
@@ -637,7 +647,7 @@ func (t *StateDAO) setVoteEvent(voteEvent VoteEvent){
 	voteEvent.AccountId = t.getAccountId()
 	var json_bytes, err = json.Marshal(voteEvent)
 	if err != nil {
-		panic("Invalid JSON while setting event")
+		doPanic(500, "Invalid JSON while setting event")
 	}
 	printJson("EVENT",voteEvent)
 	t.Stub.SetEvent("VOTE", json_bytes)
@@ -655,7 +665,7 @@ func (t *StateDAO) getAccountId()(string){
 	result, err := impl.NewAccessControlShim(t.Stub).ReadCertAttribute(ATTRIBUTE_ACCOUNT_ID)
 
 	if(err != nil){
-		panic("error extracting accountId: "+err.Error())
+		doPanic("error extracting accountId: "+err.Error())
 	}
 	return string(result)*/
 	return "netvote"
@@ -664,14 +674,14 @@ func (t *StateDAO) getAccountId()(string){
 func (t *StateDAO) deleteState(objectType string, id string){
 	err := t.Stub.DelState(t.getKey(objectType, id))
 	if(err != nil){
-		panic("error deleting "+objectType+" id:"+id)
+		doPanic(500, "error deleting "+objectType+" id:"+id)
 	}
 }
 
 func (t *StateDAO) getState(objectType string, id string, value interface{}){
 	config, err := t.Stub.GetState(t.getKey(objectType, id))
 	if(err != nil){
-		panic("error getting "+objectType+" id:"+id)
+		doPanic(500, "error getting "+objectType+" id:"+id)
 	}
 	json.Unmarshal(config, &value)
 }
@@ -732,11 +742,11 @@ func (t *StateDAO) GetAccountBallots()(AccountBallots){
 func (t *StateDAO) saveState(objectType string, id string, object interface{}){
 	var json_bytes, err = json.Marshal(object)
 	if err != nil {
-		panic("Invalid JSON while saving results")
+		doPanic(500, "Invalid JSON while saving results")
 	}
 	put_err := t.Stub.PutState(t.getKey(objectType, id), json_bytes)
 	if(put_err != nil){
-		panic("Error while putting type:"+objectType+", id:"+id)
+		doPanic(500, "Error while putting type:"+objectType+", id:"+id)
 	}
 }
 

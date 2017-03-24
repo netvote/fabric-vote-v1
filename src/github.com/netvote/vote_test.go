@@ -210,7 +210,7 @@ func TestVoteChaincode_Invoke_InvalidFunction(t *testing.T) {
 
 	stub.MockTransactionStart("test-invoke-bad-function")
 
-	checkInvokeError(t, stub, "not_real", []string{``}, "Invalid Function: not_real")
+	checkInvokeError(t, stub, "not_real", []string{``}, `{"Code":400,"Message":"Invalid Function: not_real"}`)
 }
 
 func TestVoteChaincode_Invoke_CastVote(t *testing.T) {
@@ -324,7 +324,7 @@ func TestVoteChaincode_Invoke_CastRepeatableVote(t *testing.T){
 
 	checkInvoke(t, stub, "assign_ballot", []string{`{"BallotId":"transaction-id","Description":"","Voter":{"Id":"slanders","Dimensions":[]}}`})
 
-	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders","BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`}, "Already voted this period")
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders","BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`}, `{"Code":403,"Message":"Already voted this period"}`)
 	checkInvoke(t, stub, "cast_votes", []string{`{"VoterId":"slanders","BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`,"1500"})
 	checkState(t, stub, "netvote/RESULTS/transaction-id/test-id", `{"Id":"test-id","Results":{"ALL":{"a":2}}}`)
 
@@ -367,7 +367,7 @@ func TestVoteChaincode_Invoke_ValidateCastTooMany(t *testing.T) {
 
 	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
 
-	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":2}}]}`}, "Values must add up to exactly ResponsesRequired")
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":2}}]}`}, `{"Code":400,"Message":"Values must add up to exactly ResponsesRequired"}`)
 }
 
 func TestVoteChaincode_Invoke_ValidateInvalidOption(t *testing.T) {
@@ -380,7 +380,7 @@ func TestVoteChaincode_Invoke_ValidateInvalidOption(t *testing.T) {
 
 	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
 
-	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"c":1}}]}`}, "Invalid option: c")
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"c":1}}]}`}, `{"Code":400,"Message":"Invalid option: c"}`)
 }
 
 func TestVoteChaincode_Invoke_ValidateNotActive(t *testing.T) {
@@ -395,7 +395,7 @@ func TestVoteChaincode_Invoke_ValidateNotActive(t *testing.T) {
 
 	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
 
-	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`}, "This ballot is not active")
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`}, `{"Code":403,"Message":"This ballot is not active"}`)
 }
 
 func TestVoteChaincode_Invoke_ValidateJustFine(t *testing.T) {
@@ -430,7 +430,7 @@ func TestVoteChaincode_Invoke_ValidateTooEarly(t *testing.T) {
 
 	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
 
-	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`, strconv.Itoa(nowTime)}, "This ballot is not active")
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`, strconv.Itoa(nowTime)}, `{"Code":403,"Message":"This ballot is not active"}`)
 }
 
 func TestVoteChaincode_Invoke_ValidateTooLate(t *testing.T) {
@@ -448,7 +448,7 @@ func TestVoteChaincode_Invoke_ValidateTooLate(t *testing.T) {
 
 	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
 
-	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`, strconv.Itoa(nowTime)}, "This ballot is not active")
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`, strconv.Itoa(nowTime)}, `{"Code":403,"Message":"This ballot is not active"}`)
 }
 
 
@@ -464,7 +464,7 @@ func TestVoteChaincode_Invoke_ValidateCastTooFew(t *testing.T) {
 
 	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
 
-	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`}, "All selections must be made")
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`}, `{"Code":400,"Message":"All selections must be made"}`)
 }
 
 func TestVoteChaincode_Invoke_InitVoterWithAttributes(t *testing.T) {
