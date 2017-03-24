@@ -5,6 +5,7 @@ import (
 	"testing"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"os"
+	"strconv"
 )
 
 const CREATE_DECISION_JSON = `{"Id":"test-id","Name":"What is your decision?","BallotId":"transaction-id","Description":"","Options":[{"Id":"a","Name":"A","Description":"","Attributes":{"image":"/url"}}],"Attributes":{"Key":"Value"}}`
@@ -376,6 +377,60 @@ func TestVoteChaincode_Invoke_ValidateNotActive(t *testing.T) {
 
 	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`}, "This ballot is not active")
 }
+
+func TestVoteChaincode_Invoke_ValidateJustFine(t *testing.T) {
+	scc := new(VoteChaincode)
+	stub := shim.NewMockStub("vote", scc)
+
+	stub.MockTransactionStart("test-invoke-cast-vote")
+
+	startTime := 500
+	endTime := 1000
+	nowTime := 750
+
+	checkInvokeTX(t, stub,  "transaction-id", "add_ballot",
+		[]string{`{"Ballot":{"Id":"transaction-id","Name":"Nov 8, 2016","Active":false, "StartTimeSeconds": `+strconv.Itoa(startTime)+`, "EndTimeSeconds": `+strconv.Itoa(endTime)+`}, "Decisions":[`+TEST_DECISION_JSON+`]}`})
+
+	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
+	checkInvokeTX(t, stub, "transaction-id", "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`, strconv.Itoa(nowTime)})
+}
+
+func TestVoteChaincode_Invoke_ValidateTooEarly(t *testing.T) {
+	scc := new(VoteChaincode)
+	stub := shim.NewMockStub("vote", scc)
+
+	stub.MockTransactionStart("test-invoke-cast-vote")
+
+	startTime := 500
+	endTime := 1000
+	nowTime := 250
+
+	checkInvokeTX(t, stub,  "transaction-id", "add_ballot",
+		[]string{`{"Ballot":{"Id":"transaction-id","Name":"Nov 8, 2016","Active":false, "StartTimeSeconds": `+strconv.Itoa(startTime)+`, "EndTimeSeconds": `+strconv.Itoa(endTime)+`}, "Decisions":[`+TEST_DECISION_JSON+`]}`})
+
+	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
+
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`, strconv.Itoa(nowTime)}, "This ballot is not active")
+}
+
+func TestVoteChaincode_Invoke_ValidateTooLate(t *testing.T) {
+	scc := new(VoteChaincode)
+	stub := shim.NewMockStub("vote", scc)
+
+	stub.MockTransactionStart("test-invoke-cast-vote")
+
+	startTime := 500
+	endTime := 1000
+	nowTime := 1250
+
+	checkInvokeTX(t, stub,  "transaction-id", "add_ballot",
+		[]string{`{"Ballot":{"Id":"transaction-id","Name":"Nov 8, 2016","Active":false, "StartTimeSeconds": `+strconv.Itoa(startTime)+`, "EndTimeSeconds": `+strconv.Itoa(endTime)+`}, "Decisions":[`+TEST_DECISION_JSON+`]}`})
+
+	checkInvokeTX(t, stub, "transaction-id", "init_voter", []string{`{"Id":"slanders"}`})
+
+	checkInvokeError(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId":"transaction-id","Description":"", "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`, strconv.Itoa(nowTime)}, "This ballot is not active")
+}
+
 
 func TestVoteChaincode_Invoke_ValidateCastTooFew(t *testing.T) {
 	scc := new(VoteChaincode)
