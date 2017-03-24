@@ -212,6 +212,7 @@ func addBallotDecisionsToVoter(stateDao StateDAO, ballot Ballot, voter *Voter, s
 		addDecisionToVoter(ballot.Id, voter, decision)
 	}
 	if(save) {
+		printJson("saving voter", voter)
 		stateDao.SaveVoter(*voter)
 	}
 }
