@@ -168,7 +168,7 @@ func validate(stateDao StateDAO, vote Vote, voter Voter){
 	for _, decision := range vote.Decisions {
 		d := stateDao.GetDecision(vote.BallotId, decision.DecisionId)
 
-		if(voter.DecisionIdToVoteCount == nil) {
+		if(voter.DecisionIdToVoteCount == nil || voter.DecisionIdToVoteCount[vote.BallotId][decision.DecisionId] == 0) {
 			panic("This voter has no votes")
 		}
 		if(d.ResponsesRequired != len(decision.Selections)){
