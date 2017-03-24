@@ -152,6 +152,8 @@ func stringInSlice(a string, list []Option) bool {
 
 func validate(stateDao StateDAO, vote Vote, voter Voter){
 
+	printJson("validate voter", voter)
+	printJson("validate vote", vote)
 	if(vote.BallotId == ""){
 		//TODO: for now, this is required
 		panic("BallotId is required")
@@ -165,7 +167,7 @@ func validate(stateDao StateDAO, vote Vote, voter Voter){
 
 	for _, decision := range vote.Decisions {
 		d := stateDao.GetDecision(vote.BallotId, decision.DecisionId)
-		printJson("validate voter:", voter)
+
 		if(voter.DecisionIdToVoteCount == nil) {
 			panic("This voter has no votes")
 		}
@@ -182,6 +184,7 @@ func validate(stateDao StateDAO, vote Vote, voter Voter){
 			total += sel
 		}
 		if(total != voter.DecisionIdToVoteCount[vote.BallotId][decision.DecisionId]){
+			printJson("DecisionId", decision.DecisionId)
 			panic("Values must add up to exactly ResponsesRequired")
 		}
 
