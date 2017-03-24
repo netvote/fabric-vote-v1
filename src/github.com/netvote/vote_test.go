@@ -239,6 +239,26 @@ func TestVoteChaincode_Invoke_CastVote(t *testing.T) {
 	checkState(t, stub, "netvote/RESULTS/transaction-id/test-id", `{"Id":"test-id","Results":{"ALL":{"a":1},"GA":{"a":1},"US":{"a":1}}}`)
 }
 
+func TestVoteChaincode_Invoke_CastVoteNewVoter(t *testing.T) {
+	mockEnv()
+	scc := new(VoteChaincode)
+
+	stub := shim.NewMockStub("vote", scc)
+
+	stub.MockTransactionStart("test-invoke-add-decision")
+
+	checkInvokeTX(t, stub,  "transaction-id", "add_ballot",
+		[]string{`{"Ballot":{"Id":"transaction-id","Name":"Nov 8, 2016","Active":true}, "Decisions":[`+CREATE_DECISION_JSON+`]}`})
+
+	checkState(t, stub, "netvote/DECISION/transaction-id/test-id", TEST_DECISION_JSON)
+	checkState(t, stub, "netvote/BALLOT/transaction-id", `{"Id":"transaction-id","Name":"Nov 8, 2016","Decisions":["test-id"],"Private":false,"Attributes":null,"Description":"","StartTimeSeconds":0,"EndTimeSeconds":0,"Active":true}`)
+	checkState(t, stub, "netvote/ACCOUNT_BALLOTS/netvote", `{"Id":"netvote","PublicBallotIds":{"transaction-id":true},"PrivateBallotIds":{}}`)
+	checkInvoke(t, stub, "cast_votes", []string{`{"VoterId":"slanders", "BallotId": "transaction-id", "Dimensions":["US","GA"], "Decisions":[{"DecisionId":"test-id", "Selections": {"a":1}}]}`,"600"})
+
+	checkState(t, stub, "netvote/VOTER/slanders", `{"Id":"slanders","Dimensions":[],"DecisionIdToVoteCount":{"transaction-id":{"test-id":0}},"DecisionTimestamps":{"transaction-id":{"test-id":[600]}},"LastVoteTimestampSeconds":600,"Attributes":null}`)
+	checkState(t, stub, "netvote/RESULTS/transaction-id/test-id", `{"Id":"test-id","Results":{"ALL":{"a":1},"GA":{"a":1},"US":{"a":1}}}`)
+}
+
 func TestVoteChaincode_Invoke_CastVoteMultiBallot(t *testing.T) {
 	mockEnv()
 	scc := new(VoteChaincode)

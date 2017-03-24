@@ -63,7 +63,7 @@ module.exports.invoke = (func, jsonArg, commitHandler) => {
             function (admin) {
                 tx_id = helper.getTxId();
                 let nonce = utils.getNonce();
-                let args = helper.getArgs([func, JSON.stringify(jsonArg), ""+Math.floor(new Date().getTime())]);
+                let args = helper.getArgs([func, JSON.stringify(jsonArg), ""+Math.floor(new Date().getTime()/1000)]);
 
                 let request = {
                     chaincodeId: config.chaincodeID,
@@ -89,10 +89,9 @@ module.exports.invoke = (func, jsonArg, commitHandler) => {
                 if (response.status === 'SUCCESS') {
                     let handle = setTimeout(() => {
                         console.error('Failed to receive transaction notification within the timeout period');
-                        if (commitHandler != undefined) {
+                        if (commitHandler !== undefined) {
                             commitHandler({
-                                result: "failed",
-                                error: "timed out"
+                                result: "failed"
                             });
                         }
                     }, parseInt(config.waitTime));
@@ -102,7 +101,7 @@ module.exports.invoke = (func, jsonArg, commitHandler) => {
                         console.log("Transaction has been successfully committed");
                         clearTimeout(handle);
                         eventhub.disconnect();
-                        if (commitHandler != undefined) {
+                        if (commitHandler !== undefined) {
                             commitHandler({
                                 result: "success"
                             });

@@ -23,7 +23,7 @@ spec:
                 "-p", "8081",
                 "-a", "127.0.0.1:3000",
                 "-s", "api.endpoints.netvote-160820.cloud.goog",
-                "-v", "2017-03-23r0",
+                "-v", "2017-03-24r1",
               ]
         ports:
           - containerPort: 8081

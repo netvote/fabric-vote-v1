@@ -11,10 +11,25 @@ let firebase = admin.initializeApp({
     databaseURL: process.env.FIREBASE_DATABASE_URL
 });
 
-module.exports.addBallot = (payload) => {
-    let ballot = payload.ballot;
+module.exports.castVote = (body) => {
+    //TODO: validation
+    let vote = body.payload;
     return new Promise(function(resolve, reject) {
+        fabric.invoke("cast_votes", vote, (commitResult) => {
+            firebase.database().ref(body.txRefPath).update({status: commitResult.result})
+        }).then((result) => {
+            resolve(result)
+        }).catch((err)=>{
+            firebase.database().ref(body.txRefPath).update({status: "error"});
+            reject(err)
+        });
+    });
+};
 
+module.exports.addBallot = (body) => {
+    //TODO: validation
+    let ballot = body.payload;
+    return new Promise(function(resolve, reject) {
         ballot.Ballot.Id = uuidV4();
 
         for(let decision of ballot.Decisions){
@@ -22,12 +37,13 @@ module.exports.addBallot = (payload) => {
         }
 
         fabric.invoke("add_ballot", ballot, (commitResult) => {
-            firebase.database().ref(payload.callbackRef).update({status: commitResult.result})
+            firebase.database().ref(body.txRefPath).update({status: commitResult.result})
         }).then((result) => {
             let ballotResults = JSON.parse(result.toString());
             ballotResults.Decisions = ballot.Decisions;
             resolve(JSON.stringify(ballotResults))
         }).catch((err)=>{
+            firebase.database().ref(body.txRefPath).update({status: "error"});
             reject(err)
         });
     });

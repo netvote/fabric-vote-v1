@@ -31,7 +31,23 @@ paths:
       responses:
         200:
           description: "Resulting ballot"
-
+  "/castVote":
+    post:
+      description: "Cast a vote."
+      operationId: "castVote"
+      produces:
+      - "application/json"
+      parameters:
+        -
+          name: "vote"
+          in: "body"
+          description: "Vote object"
+          required: true
+          schema:
+            type: "object"
+      responses:
+        200:
+          description: "Transaction result"
 
 # This section requires all requests to any path to require an API key.
 security:

@@ -7,11 +7,20 @@ const PREFIX = "/api/v1";
 
 app.use(bodyParser.json());
 
+app.post(PREFIX+'/castVote', function (req, res) {
+    netvote.castVote(req.body).then((result)=> {
+        res.send(result)
+    }).catch((err) =>{
+        console.error("Error while voting", err);
+        res.sendStatus(500)
+    });
+});
+
 app.post(PREFIX+'/ballot', function (req, res) {
     netvote.addBallot(req.body).then((result)=> {
         res.send(result)
     }).catch((err) =>{
-        console.error(err)
+        console.error("Error while saving ballot", err);
         res.sendStatus(500)
     });
 });

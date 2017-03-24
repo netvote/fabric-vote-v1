@@ -150,8 +150,7 @@ func stringInSlice(a string, list []Option) bool {
 	return false
 }
 
-func validate(stateDao StateDAO, vote Vote){
-	var voter = stateDao.GetVoter(vote.VoterId)
+func validate(stateDao StateDAO, vote Vote, voter Voter){
 
 	if(vote.BallotId == ""){
 		//TODO: for now, this is required
@@ -166,6 +165,7 @@ func validate(stateDao StateDAO, vote Vote){
 
 	for _, decision := range vote.Decisions {
 		d := stateDao.GetDecision(vote.BallotId, decision.DecisionId)
+		printJson("validate voter:", voter)
 		if(voter.DecisionIdToVoteCount == nil) {
 			panic("This voter has no votes")
 		}
@@ -313,7 +313,7 @@ func initializeVoterFromVote(stateDao StateDAO, vote Vote)(Voter){
 
 func castVote(stateDao StateDAO, vote Vote){
 	voter := initializeVoterFromVote(stateDao, vote)
-	validate(stateDao, vote)
+	validate(stateDao, vote, voter)
 	results_array := make([]DecisionResults, 0)
 
 	dimensions := getDimensionsForVote(voter, vote)
