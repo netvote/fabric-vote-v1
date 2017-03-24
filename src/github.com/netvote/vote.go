@@ -307,6 +307,7 @@ func initializeVoterFromVote(stateDao StateDAO, vote Vote)(Voter){
 		voter = lazyInitVoter(stateDao, Voter{ Id: vote.VoterId })
 		ballot := stateDao.GetBallot(vote.BallotId)
 		addBallotDecisionsToVoter(stateDao, ballot, &voter, true)
+		voter.Id = vote.VoterId
 	}
 	return voter
 }
@@ -411,7 +412,7 @@ func parseArg(arg string, value interface{}){
 
 func lazyInitVoter(stateDao StateDAO, voter Voter)(Voter){
 	v := stateDao.GetVoter(voter.Id)
-	if(v.Id != voter.Id){
+	if(v.Id == ""){
 		addVoter(stateDao, voter)
 		v = stateDao.GetVoter(voter.Id)
 	}
