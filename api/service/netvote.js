@@ -19,7 +19,7 @@ module.exports.castVote = (body) => {
             firebase.database().ref(body.txRefPath).update({status: commitResult.result})
         }).then((result) => {
             resolve(result)
-        }).catch((err)=>{
+        }).catch((err) => {
             firebase.database().ref(body.txRefPath).update({status: "error"});
             reject(err)
         });

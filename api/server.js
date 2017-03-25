@@ -12,7 +12,7 @@ app.post(PREFIX+'/castVote', function (req, res) {
         res.send(result)
     }).catch((err) =>{
         console.error("Error while voting", err);
-        res.sendStatus(500)
+        res.status(err.Code).send(err);
     });
 });
 
@@ -21,7 +21,7 @@ app.post(PREFIX+'/ballot', function (req, res) {
         res.send(result)
     }).catch((err) =>{
         console.error("Error while saving ballot", err);
-        res.sendStatus(500)
+        res.status(err.Code).send(err);
     });
 });
 
@@ -29,10 +29,10 @@ app.get(PREFIX+'/ballot/:ballotId', function (req, res) {
     netvote.getBallotConfig(req.params.ballotId).then((result)=> {
         res.send(result)
     }).catch((err) =>{
-        res.sendStatus(500)
+        res.status(err.Code).send(err);
     });
 });
 
 app.listen(3000, (req, res) => {
-    console.log('Example app listening on port 3000!')
+    console.log('Netvote API listening on port 3000!')
 });

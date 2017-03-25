@@ -79,10 +79,21 @@ module.exports.invoke = (func, jsonArg, commitHandler) => {
             }
         ).then(
             function (results) {
-                console.log('Obtained proposal responses from endorsers');
+                console.log('Obtained proposal responses from endorsers: '+JSON.stringify(results));
                 let request = helper.processProposal(results, func);
-                resolve(request.proposalResponses[0].response.payload);
-                return  helper.submitTransaction(request, chain);
+                if(request.status === "success"){
+                    resolve(request.proposalResponses[0].response.payload);
+                    return helper.submitTransaction(request, chain);
+                }else{
+                    try {
+                        let errorJson = request.message.substring(request.message.indexOf("{"));
+                        let errorObj = JSON.parse(errorJson)
+                        reject(errorObj);
+                    }catch(e){
+                        logger.error("cannot parse error:"+ request.message);
+                        reject({Code: 500, Message: "Invalid Response"});
+                    }
+                }
             }
         ).then(
             function (response) {

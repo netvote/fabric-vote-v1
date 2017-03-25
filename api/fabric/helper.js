@@ -82,13 +82,17 @@ module.exports.processProposal = function(results, proposalType) {
 			console.log('Successfully obtained transaction endorsements.');
 		}
 		return {
+			status: "success",
 			proposalResponses: proposalResponses,
 			proposal: proposal,
 			header: header
 		};
 	} else {
-		console.error('Failed to send Proposal or receive valid response. Response null or status is not 200. exiting...');
-		throw new Error('Problems happened when examining proposal responses');
+        console.error('Found bad proposal responses');
+        return {
+            status: "error",
+            message: proposalResponses[0].message
+        };
 	}
 };
 
