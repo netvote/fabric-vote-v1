@@ -151,10 +151,14 @@ func stringInSlice(a string, list []Option) bool {
 }
 
 func doPanic(statusCode int, message string){
-	jsonErr, _ := json.Marshal(pb.Response {
-		Status: int32(statusCode),
-		Message: fmt.Sprintf(`{"Code":%s,"Message":"%s"}`, strconv.Itoa(statusCode), message)})
+	jsonErr, _ := json.Marshal(getResponse(statusCode, message))
 	panic(string(jsonErr))
+}
+
+func getResponse(statusCode int, message string)(pb.Response){
+	return pb.Response {
+		Status: int32(statusCode),
+		Message: fmt.Sprintf(`{"Code":%s,"Message":"%s"}`, strconv.Itoa(statusCode), message)}
 }
 
 func validate(stateDao StateDAO, vote Vote, voter Voter){
@@ -526,7 +530,9 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 		default:
 			doPanic(400, "Invalid Function: "+function)
 	}
-
+	if(result == nil){
+		result, err = json.Marshal(getResponse(200, stateDao.Stub.GetTxID()))
+	}
 	return shim.Success(result)
 
 }
