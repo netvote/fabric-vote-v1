@@ -39,11 +39,6 @@ const QUERY_GET_ACCOUNT_BALLOTS = "get_account_ballots"
 type VoteChaincode struct {
 }
 
-type StatusError struct {
-	Code int
-	Message string
-}
-
 type Option struct {
 	Id string
 	Name string
@@ -156,8 +151,10 @@ func stringInSlice(a string, list []Option) bool {
 }
 
 func doPanic(statusCode int, message string){
-	json, _ := json.Marshal(StatusError {Code: statusCode, Message: message})
-	panic(string(json))
+	jsonErr, _ := json.Marshal(pb.Response {
+		Status: int32(statusCode),
+		Message: fmt.Sprintf(`{"Code":%s,"Message":"%s"}`, strconv.Itoa(statusCode), message)})
+	panic(string(jsonErr))
 }
 
 func validate(stateDao StateDAO, vote Vote, voter Voter){
@@ -456,7 +453,7 @@ func handleInvoke(stub shim.ChaincodeStubInterface, function string, args []stri
 		if r := recover(); r != nil {
 			err = errors.New(fmt.Sprintf("%v", r))
 			fmt.Printf("error: %v\n",err)
-			resp = shim.Error(err.Error())
+			parseArg(err.Error(), &resp)
 		}
 	}()
 
