@@ -313,13 +313,9 @@ func getAttributesForVote(voter Voter, vote Vote)(map[string]string){
 }
 
 func initializeVoterFromVote(stateDao StateDAO, vote Vote)(Voter){
-	voter := stateDao.GetVoter(vote.VoterId)
-	if(voter.Id == ""){
-		voter = lazyInitVoter(stateDao, Voter{ Id: vote.VoterId })
-		ballot := stateDao.GetBallot(vote.BallotId)
-		addBallotDecisionsToVoter(stateDao, ballot, &voter, true)
-		voter.Id = vote.VoterId
-	}
+	voter :=  lazyInitVoter(stateDao, Voter{ Id: vote.VoterId })
+	ballot := stateDao.GetBallot(vote.BallotId)
+	addBallotDecisionsToVoter(stateDao, ballot, &voter, true)
 	return voter
 }
 
