@@ -37,20 +37,6 @@ let orderer = process.env.ORDERER_GRPC_URL;
 let peers = process.env.PEER_GRPC_URLS.split(",");
 let eventhubUrl = process.env.EVENT_HUB_URL;
 
-
-let voteEventHub = new EventHub();
-voteEventHub.setPeerAddr(eventhubUrl);
-voteEventHub.connect();
-voteEventHub.registerChaincodeEvent(config.chaincodeID, "VOTE", (voteEvent)=>{
-    for(let key in voteEvent){
-        console.log("EVENT: "+key+"="+voteEvent[key]);
-    }
-    console.log("EVENT JSON: "+voteEvent.encodeJSON());
-    console.log("EVENT PAYLOAD"+voteEvent.getPayload().toString("utf8"));
-
-    //TODO: submit to pub/sub
-});
-
 init();
 
 function init() {

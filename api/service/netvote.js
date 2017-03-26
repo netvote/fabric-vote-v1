@@ -1,6 +1,9 @@
 let fabric = require("../fabric/fabric.js");
 const uuidV4 = require('uuid/v4');
 let admin = require("firebase-admin");
+let EventHub = require('fabric-client/lib/EventHub.js');
+
+let eventhubUrl = process.env.EVENT_HUB_URL;
 
 let firebase = admin.initializeApp({
     credential: admin.credential.cert({
@@ -10,6 +13,32 @@ let firebase = admin.initializeApp({
     }),
     databaseURL: process.env.FIREBASE_DATABASE_URL
 });
+
+
+let voteEventHub = new EventHub();
+voteEventHub.setPeerAddr(eventhubUrl);
+voteEventHub.connect();
+voteEventHub.registerChaincodeEvent("netvote-dev", "VOTE", (voteEvent)=>{
+    let eventJson = JSON.parse(voteEvent.encodeJSON());
+    eventJson["payload"] = JSON.parse(voteEvent.getPayload().toString("utf8"));
+    console.log("VOTE EVENT: "+JSON.stringify(eventJson));
+
+    let ballotId = eventJson.payload.Ballot.Ballot.Attributes.ballotId;
+    let currentResults = eventJson.payload.BallotResults.Results;
+    let updates = {};
+
+    for(let decisionId in currentResults){
+        if(currentResults.hasOwnProperty(decisionId)){
+            updates["/ballot-results/"+ballotId+"/decisions/"+decisionId+"/results"] = currentResults[decisionId].Results
+        }
+    }
+
+    firebase.database().ref().update(updates).then(()=>{
+        console.log("updated ballot results for "+ballotId)
+    });
+
+});
+
 
 module.exports.castVote = (body) => {
     //TODO: validation
