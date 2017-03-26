@@ -334,6 +334,8 @@ func castVote(stateDao StateDAO, vote Vote){
 
 	now := stateDao.timeInSeconds
 
+	resultsMap := make(map[string]DecisionResults)
+
 	for _, voter_decision := range vote.Decisions {
 
 		decisionResults := stateDao.GetDecisionResults(vote.BallotId, voter_decision.DecisionId)
@@ -358,6 +360,7 @@ func castVote(stateDao StateDAO, vote Vote){
 				decisionResults.Results[dimension][selection] += vote_count
 			}
 		}
+		resultsMap[voter_decision.DecisionId] = decisionResults;
 		results_array = append(results_array, decisionResults)
 		voter.DecisionTimestamps[vote.BallotId][voter_decision.DecisionId] = append(voter.DecisionTimestamps[vote.BallotId][voter_decision.DecisionId], now)
 	}
@@ -368,8 +371,7 @@ func castVote(stateDao StateDAO, vote Vote){
 	stateDao.SaveVoter(voter)
 
 	ballot := stateDao.GetBallotDecisions(vote.BallotId)
-
-	ballotResults := getBallotResults(stateDao, vote.BallotId)
+	ballotResults := BallotResults{Id: ballot.Ballot.Id, Results: resultsMap}
 
 	voteEvent := VoteEvent{
 			Ballot: ballot,
