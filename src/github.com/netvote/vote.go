@@ -139,6 +139,7 @@ type VoteEvent struct {
 	VoterAttributes map[string]string
 	VoteDecisions []VoterDecision
 	AccountId string
+	BallotResults BallotResults
 }
 
 func stringInSlice(a string, list []Option) bool {
@@ -367,11 +368,15 @@ func castVote(stateDao StateDAO, vote Vote){
 	stateDao.SaveVoter(voter)
 
 	ballot := stateDao.GetBallotDecisions(vote.BallotId)
+
+	ballotResults := getBallotResults(stateDao, vote.BallotId)
+
 	voteEvent := VoteEvent{
 			Ballot: ballot,
 			Dimensions: dimensions,
 			VoteDecisions: vote.Decisions,
 			VoterAttributes: attributes,
+			BallotResults: ballotResults,
 	}
 
 	stateDao.setVoteEvent(voteEvent)
